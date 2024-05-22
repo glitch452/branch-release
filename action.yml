@@ -1,0 +1,60 @@
+name: Branch Release
+author: David Dearden
+description:
+  Automate the release of code where the dist files need to published to a GitHub branch. Use Conventional Commits to
+  automatically update the release version and create GitHub release notes, then build and push to the release branch
+  with git tags.
+branding:
+  icon: git-branch
+  color: red
+
+runs:
+  using: node20
+  main: dist/index.js
+
+inputs:
+  github-token:
+    description: A github token with access to write to the repository.
+    required: true
+  build-command:
+    description: The command to build the dist files for the project (ex. npm run build)
+  changelog-titles:
+    description:
+      'A JSON encoded object, mapping the conventional commit type to the section title to use in the changelog for that
+      type. These values will be merged into and override the default titles. (ex. `{ "feat": "New Features" }`)'
+  disable-git-tagging:
+    description: Disable setting and/or updating the git tags.
+    default: 'false'
+  dry-run:
+    description: Run the action without actually releasing the package or pushing git tags.
+    default: 'false'
+  git-tag-suffix:
+    description: A value append to the git tags.
+  major-types:
+    description: A comma-separated list of conventional commit types that trigger a major version change.
+  minor-types:
+    description:
+      A comma-separated list of conventional commit types that trigger a minor version change. It defaults to `feat`
+  release-branch:
+    description: The name of the branch to publish the release to.
+    default: release
+  tracking-tag:
+    description: The name of the tag to put on the source branch to track the source of the latest Release.
+    default: latest-src
+  version-override:
+    description:
+      The version to use for publishing the package instead of determining the version using conventional commits.
+
+outputs:
+  current-version:
+    description: The version of the package before it is updated.
+  increment-type:
+    description: The type of version increment (if applicable) in ['major', 'minor', 'patch'].
+  next-version:
+    description: The new version of the package (ex. '1.2.3').
+  next-version-major:
+    description: The major portion of the new version of the package (ex. '1').
+  next-version-minor:
+    description: The minor portion of the new version of the package (ex. '2').
+  next-version-patch:
+    description: The patch portion of the new version of the package (ex. '3').

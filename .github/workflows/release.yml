@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - develop
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  ENV: ci
+  HUSKY: '0'
+
+jobs:
+  test:
+    name: Publish to the release branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Publish to the release branch
+        id: publish
+        uses: glitch452/branch-release@bootstrap
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          build-command: npm run build
