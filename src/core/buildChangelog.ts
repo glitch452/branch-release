@@ -1,8 +1,28 @@
 import { CONVENTIONAL_COMMIT_REGEX, DEFAULT_TYPE_TITLES } from './constants.js';
 import { GitLogEntry, createIsMajorChange } from './git-log-tools.js';
 
+interface RepoMeta {
+  owner: string;
+  repo: string;
+}
+
+const HASH_PREFIX_SIZE = 7;
+
+function buildChangeLine(description: string, hash: string, repoMeta: RepoMeta, scope?: string) {
+  const parts = ['-'];
+
+  if (scope) {
+    parts.push(`${scope}:`);
+  }
+
+  const hashLink = `([${hash.slice(0, HASH_PREFIX_SIZE)}](https://github.com/${repoMeta.owner}/${repoMeta.repo}/commit/${hash}))`;
+  parts.push(description, hashLink);
+  return parts.join(' ');
+}
+
 export function buildChangelog(
   gitHistory: readonly GitLogEntry[],
+  repoMeta: RepoMeta,
   typeTitles: Readonly<Record<string, string>> = DEFAULT_TYPE_TITLES,
   majorTypes: readonly string[] = [],
 ) {
@@ -18,7 +38,7 @@ export function buildChangelog(
 
     const { type: _type, scope, description } = match;
     const type = isMajorChange(entry) ? 'breaking' : _type;
-    const change = scope ? `- ${scope}: ${description}` : `- ${description}`;
+    const change = buildChangeLine(description, entry.hash, repoMeta, scope);
 
     const list = changesByType.get(type);
     if (list) {
