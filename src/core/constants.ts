@@ -2,6 +2,7 @@ export const DEFAULT_TYPE_TITLES = {
   breaking: 'BREAKING CHANGES',
   build: 'Build',
   chore: 'Chores',
+  docs: 'Documentation',
   ci: 'Continuous Integration',
   feat: 'Features',
   fix: 'Fixes',
