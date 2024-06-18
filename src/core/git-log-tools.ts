@@ -1,6 +1,7 @@
 export interface GitLogEntry {
   message: string;
   body: string;
+  hash: string;
 }
 
 export function createIsMajorChange(majorTypes: readonly string[]) {

@@ -40303,6 +40303,7 @@ const DEFAULT_TYPE_TITLES = {
     breaking: 'BREAKING CHANGES',
     build: 'Build',
     chore: 'Chores',
+    docs: 'Documentation',
     ci: 'Continuous Integration',
     feat: 'Features',
     fix: 'Fixes',
@@ -45221,7 +45222,17 @@ function getIncrementType(gitHistory, majorTypes, minorTypes) {
 ;// CONCATENATED MODULE: ./src/core/buildChangelog.ts
 
 
-function buildChangelog(gitHistory, typeTitles = DEFAULT_TYPE_TITLES, majorTypes = []) {
+const HASH_PREFIX_SIZE = 7;
+function buildChangeLine(description, hash, repoMeta, scope) {
+    const parts = ['-'];
+    if (scope) {
+        parts.push(`${scope}:`);
+    }
+    const hashLink = `([${hash.slice(0, HASH_PREFIX_SIZE)}](https://github.com/${repoMeta.owner}/${repoMeta.repo}/commit/${hash}))`;
+    parts.push(description, hashLink);
+    return parts.join(' ');
+}
+function buildChangelog(gitHistory, repoMeta, typeTitles = DEFAULT_TYPE_TITLES, majorTypes = []) {
     const isMajorChange = createIsMajorChange(majorTypes);
     const changesByType = new Map();
     for (const entry of gitHistory) {
@@ -45231,7 +45242,7 @@ function buildChangelog(gitHistory, typeTitles = DEFAULT_TYPE_TITLES, majorTypes
         }
         const { type: _type, scope, description } = match;
         const type = isMajorChange(entry) ? 'breaking' : _type;
-        const change = scope ? `- ${scope}: ${description}` : `- ${description}`;
+        const change = buildChangeLine(description, entry.hash, repoMeta, scope);
         const list = changesByType.get(type);
         if (list) {
             list.push(change);
@@ -45380,7 +45391,7 @@ async function run() {
             ...github.context.repo,
             tag_name: newTag,
             name: newTag,
-            body: buildChangelog(gitHistory, inputs.changelogTitles, inputs.majorTypes),
+            body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
             prerelease: false,
             draft: false,
         });

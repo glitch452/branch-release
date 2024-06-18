@@ -144,7 +144,7 @@ export async function run() {
       ...github.context.repo,
       tag_name: newTag,
       name: newTag,
-      body: buildChangelog(gitHistory, inputs.changelogTitles, inputs.majorTypes),
+      body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
       prerelease: false,
       draft: false,
     });
