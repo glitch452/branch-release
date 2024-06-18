@@ -78,6 +78,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Optionally, use a deploy key to bypass branch protection rules
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
