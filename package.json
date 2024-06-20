@@ -22,7 +22,7 @@
     "clean": "rimraf dist",
     "pre-commit": "lint-staged --config lint-staged.config.js",
     "prepare": "husky",
-    "test:ci": "vitest run --config vitest.config.ci.ts --coverage",
+    "test:ci": "vitest run --config vite.config.ci.ts --coverage",
     "test:w": "vitest",
     "test": "vitest run --coverage",
     "type": "tsc --noEmit -p tsconfig.json"
