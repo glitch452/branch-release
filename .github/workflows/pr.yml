@@ -22,8 +22,17 @@ jobs:
       HUSKY: '0'
 
     steps:
+      - name: Get Fetch Depth
+        id: fetch_depth
+        run: |
+          FETCH_DEPTH="$(( ${{ github.event.pull_request.commits }} + 2 ))"
+          echo "Fetch Depth: ${FETCH_DEPTH}"
+          echo "fetch_depth=${FETCH_DEPTH}" >> "$GITHUB_OUTPUT"
+
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ steps.fetch_depth.outputs.fetch_depth }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -32,6 +41,10 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
+
+      - name: Validate PR commit messages with commitlint
+        run: |
+          npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
       - name: Check Formatting
         run: npm run format:ci
