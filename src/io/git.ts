@@ -80,11 +80,11 @@ export class Git {
       }
     }
 
+    core.debug(`Git History Details: ${JSON.stringify({ trackingTag, fromSha, toSha: newCommitSha })}`);
+
     if (fromSha === newCommitSha) {
       return [];
     }
-
-    core.debug(JSON.stringify({ trackingTag, fromSha, toSha: newCommitSha }));
 
     const logOptions = fromSha ? { from: fromSha, to: newCommitSha } : undefined;
     const logs = await this.git.log(logOptions);
