@@ -1,12 +1,17 @@
+import path from 'path';
+import fs from 'fs';
+import yaml from 'yaml';
 import { DEFAULT_TYPE_TITLES } from './constants.js';
 import { Getters, InputOptions, getInputs } from './getInputs.js';
 
 describe(getInputs.name, () => {
   let lookup: Record<string, string>;
 
+  const requestedInputs = new Set<string>();
   const getters: Getters = {
     getInput(name: string, options?: InputOptions) {
       const value = lookup[name] ?? '';
+      requestedInputs.add(name);
       if (options?.required && !value) {
         throw new Error(`Value Required for ${name}`);
       }
@@ -22,6 +27,19 @@ describe(getInputs.name, () => {
 
   beforeEach(() => {
     lookup = { 'registry-token': '<registryToken>', 'github-token': '<githubToken>' };
+  });
+
+  describe('action.yaml', () => {
+    it('Should contain exactly the inputs that are requested in the action', () => {
+      const actionFilePath = path.join(import.meta.dirname, '..', '..', 'action.yml');
+      const actionFile = yaml.parse(fs.readFileSync(actionFilePath).toString());
+
+      getInputs(getters);
+
+      const actual = Object.keys(actionFile.inputs).sort();
+      const expected = [...requestedInputs].sort();
+      expect(actual).toStrictEqual(expected);
+    });
   });
 
   describe('buildCommand', () => {
