@@ -11,15 +11,14 @@
     "node": ">=20"
   },
   "scripts": {
+    "build:w": "npm run build -- --watch",
+    "build": "npm run clean && ncc build src/index.ts -o dist --source-map --license licenses.txt",
+    "clean": "rimraf dist",
     "format:ci": "prettier --check '**.{mjs,cjs,js,json,md,ts,yaml,yml}'",
     "format": "prettier --write .",
     "lint:ci": "eslint '**/*.{mjs,cjs,js,ts}'",
     "lint:nc": "eslint '**/*.{mjs,cjs,js,ts}' --report-unused-disable-directives --fix",
     "lint": "eslint '**/*.{mjs,cjs,js,ts}' --cache --report-unused-disable-directives --fix",
-    "build:w": "npm run build -- --watch",
-    "build": "npm run clean && ncc build src/index.ts -o dist --source-map --license licenses.txt",
-    "build:br": "ncc build src/scripts/branchRelease.ts -o br",
-    "clean": "rimraf dist",
     "pre-commit": "lint-staged --config lint-staged.config.js",
     "prepare": "husky",
     "test:ci": "vitest run --config vite.config.ci.ts --coverage",
