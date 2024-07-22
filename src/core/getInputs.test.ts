@@ -111,6 +111,20 @@ describe(getInputs.name, () => {
     });
   });
 
+  describe('get-release-title-from-pr', () => {
+    it('Should return false for "get-release-title-from-pr" if a value is not provided', () => {
+      lookup['get-release-title-from-pr'] = '';
+      const actual = getInputs(getters).getReleaseTitleFromPr;
+      expect(actual).toStrictEqual(false);
+    });
+
+    it('Should return true for "get-release-title-from-pr" if it is set to a true value', () => {
+      lookup['get-release-title-from-pr'] = 'true';
+      const actual = getInputs(getters).getReleaseTitleFromPr;
+      expect(actual).toStrictEqual(true);
+    });
+  });
+
   describe('githubToken', () => {
     it('Should throw an error if "disable-git-tagging" is false and the "github-token" is not provided', () => {
       lookup['disable-git-tagging'] = 'false';

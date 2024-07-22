@@ -140,11 +140,29 @@ export async function run() {
 
     /* Create release notes and GitHub Release */
     core.info('Creating GitHub Release');
+
+    const getReleaseTitle = async (): Promise<string> => {
+      if (inputs.releaseTitle) {
+        return inputs.releaseTitle;
+      }
+      if (inputs.getReleaseTitleFromPr) {
+        const response = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+          ...github.context.repo,
+          commit_sha: github.context.sha,
+        });
+        return response.data[0]?.title || newTag;
+      }
+      return newTag;
+    };
+
+    const releaseTitle = await getReleaseTitle();
+    const changelog = buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes);
+
     await octokit.rest.repos.createRelease({
       ...github.context.repo,
       tag_name: newTag,
-      name: inputs.releaseTitle || newTag,
-      body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
+      name: releaseTitle,
+      body: changelog,
       prerelease: false,
       draft: false,
     });
