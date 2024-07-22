@@ -29,6 +29,7 @@ export function getInputs(getters: Getters = core) {
     majorTypes: getters.getInput('major-types').split(',').filter(Boolean),
     minorTypes: (getters.getInput('minor-types') || 'feat').split(',').filter(Boolean),
     releaseBranch: getters.getInput('release-branch') || 'release',
+    releaseTitle: getters.getInput('release-title'),
     trackingTag: getters.getInput('tracking-tag') || 'latest-src',
     versionOverride,
   } as const;
