@@ -20,7 +20,7 @@
     "lint:nc": "eslint '**/*.{mjs,cjs,js,ts}' --report-unused-disable-directives --fix",
     "lint": "eslint '**/*.{mjs,cjs,js,ts}' --cache --report-unused-disable-directives --fix",
     "pre-commit": "lint-staged --config lint-staged.config.js",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "test:ci": "vitest run --config vite.config.ci.ts --coverage",
     "test:w": "vitest",
     "test": "vitest run --coverage",
