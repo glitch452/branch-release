@@ -28,6 +28,12 @@ inputs:
   dry-run:
     description: Run the action without actually releasing the package or pushing git tags.
     default: 'false'
+  get-release-title-from-pr:
+    description: >-
+      Attempt to get the PR title from a PR associated to the git sha. If it is found, use the PR title as the release
+      title. If not found, fall back to the release tag name. If the `release-title` has a truthy value, it will
+      override this option. Note: The GITHUB_TOKEN requires pull-request: read permissions.
+    default: 'false'
   git-tag-suffix:
     description: A value append to the git tags.
   major-types:

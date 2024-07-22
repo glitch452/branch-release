@@ -24,6 +24,7 @@ export function getInputs(getters: Getters = core) {
     changelogTitles: { ...DEFAULT_TYPE_TITLES, ...changelogTitles },
     dryRun: getters.getBooleanInput('dry-run'),
     enableGitTagging: !getters.getBooleanInput('disable-git-tagging'),
+    getReleaseTitleFromPr: getters.getBooleanInput('get-release-title-from-pr'),
     githubToken: getters.getInput('github-token', { required: true }),
     gitTagSuffix: getters.getInput('git-tag-suffix'),
     majorTypes: getters.getInput('major-types').split(',').filter(Boolean),
