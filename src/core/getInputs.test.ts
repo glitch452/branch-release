@@ -176,6 +176,19 @@ describe(getInputs.name, () => {
     });
   });
 
+  describe('releaseTitle', () => {
+    it('Should return an empty string if a value is not provided', () => {
+      const actual = getInputs(getters).releaseTitle;
+      expect(actual).toStrictEqual('');
+    });
+
+    it('Should return the provided "release-title"', () => {
+      lookup['release-title'] = '<releaseTitle>';
+      const actual = getInputs(getters).releaseTitle;
+      expect(actual).toStrictEqual('<releaseTitle>');
+    });
+  });
+
   describe('trackingTag', () => {
     it('Should return the default "tracking-tag" if it is not provided', () => {
       lookup['tracking-tag'] = '';

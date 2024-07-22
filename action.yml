@@ -38,6 +38,9 @@ inputs:
   release-branch:
     description: The name of the branch to publish the release to.
     default: release
+  release-title:
+    description:
+      The title to use for the GitHub release. If not set, or an empty string, the release tag name will be used.
   tracking-tag:
     description: The name of the tag to put on the source branch to track the source of the latest Release.
     default: latest-src

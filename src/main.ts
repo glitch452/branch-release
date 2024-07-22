@@ -143,7 +143,7 @@ export async function run() {
     await octokit.rest.repos.createRelease({
       ...github.context.repo,
       tag_name: newTag,
-      name: newTag,
+      name: inputs.releaseTitle || newTag,
       body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
       prerelease: false,
       draft: false,
