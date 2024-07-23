@@ -36,6 +36,9 @@ inputs:
     default: 'false'
   git-tag-suffix:
     description: A value append to the git tags.
+  latest-tag-name:
+    description: The tag used to track the latest commit on the release branch.
+    default: latest
   major-types:
     description: A comma-separated list of conventional commit types that trigger a major version change.
   minor-types:

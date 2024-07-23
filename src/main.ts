@@ -117,7 +117,7 @@ export async function run() {
     }
 
     /* Push the git changes */
-    const releaseTags = ['latest', newTag, newTagMinor, newTagMajor];
+    const releaseTags = [inputs.latestTagName, newTag, newTagMinor, newTagMajor];
     if (inputs.dryRun) {
       core.info(`DRY RUN: Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
       if (inputs.enableGitTagging) {

@@ -27,6 +27,7 @@ export function getInputs(getters: Getters = core) {
     getReleaseTitleFromPr: getters.getBooleanInput('get-release-title-from-pr'),
     githubToken: getters.getInput('github-token', { required: true }),
     gitTagSuffix: getters.getInput('git-tag-suffix'),
+    latestTagName: getters.getInput('latest-tag-name') || 'latest',
     majorTypes: getters.getInput('major-types').split(',').filter(Boolean),
     minorTypes: (getters.getInput('minor-types') || 'feat').split(',').filter(Boolean),
     releaseBranch: getters.getInput('release-branch') || 'release',
