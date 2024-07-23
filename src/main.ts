@@ -42,6 +42,8 @@ export async function run() {
       if (e instanceof RequestError && e.status === NOT_FOUND) {
         core.warning(`No releases found in the repo, using "${tagName}" as the current version`);
         currentVersion = semver.parse(tagName);
+      } else {
+        throw e;
       }
     }
 
