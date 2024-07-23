@@ -148,6 +148,20 @@ describe(getInputs.name, () => {
     });
   });
 
+  describe('latestTagName', () => {
+    it('Should return the default "latest-tag-name" if it is not provided', () => {
+      lookup['latest-tag-name'] = '';
+      const actual = getInputs(getters).latestTagName;
+      expect(actual).toStrictEqual('latest');
+    });
+
+    it('Should return the provided "latest-tag-name"', () => {
+      lookup['latest-tag-name'] = '<latestTagName>';
+      const actual = getInputs(getters).latestTagName;
+      expect(actual).toStrictEqual('<latestTagName>');
+    });
+  });
+
   describe('majorTypes', () => {
     it('Should return an empty list of no major types are provided', () => {
       lookup['major-types'] = '';
