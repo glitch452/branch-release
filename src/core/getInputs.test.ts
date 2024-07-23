@@ -111,6 +111,20 @@ describe(getInputs.name, () => {
     });
   });
 
+  describe('get-release-title-from-pr', () => {
+    it('Should return false for "get-release-title-from-pr" if a value is not provided', () => {
+      lookup['get-release-title-from-pr'] = '';
+      const actual = getInputs(getters).getReleaseTitleFromPr;
+      expect(actual).toStrictEqual(false);
+    });
+
+    it('Should return true for "get-release-title-from-pr" if it is set to a true value', () => {
+      lookup['get-release-title-from-pr'] = 'true';
+      const actual = getInputs(getters).getReleaseTitleFromPr;
+      expect(actual).toStrictEqual(true);
+    });
+  });
+
   describe('githubToken', () => {
     it('Should throw an error if "disable-git-tagging" is false and the "github-token" is not provided', () => {
       lookup['disable-git-tagging'] = 'false';
@@ -131,6 +145,20 @@ describe(getInputs.name, () => {
       lookup['git-tag-suffix'] = '<gitTagSuffix>';
       const actual = getInputs(getters).gitTagSuffix;
       expect(actual).toStrictEqual('<gitTagSuffix>');
+    });
+  });
+
+  describe('latestTagName', () => {
+    it('Should return the default "latest-tag-name" if it is not provided', () => {
+      lookup['latest-tag-name'] = '';
+      const actual = getInputs(getters).latestTagName;
+      expect(actual).toStrictEqual('latest');
+    });
+
+    it('Should return the provided "latest-tag-name"', () => {
+      lookup['latest-tag-name'] = '<latestTagName>';
+      const actual = getInputs(getters).latestTagName;
+      expect(actual).toStrictEqual('<latestTagName>');
     });
   });
 
@@ -173,6 +201,19 @@ describe(getInputs.name, () => {
       lookup['release-branch'] = '<releaseBranch>';
       const actual = getInputs(getters).releaseBranch;
       expect(actual).toStrictEqual('<releaseBranch>');
+    });
+  });
+
+  describe('releaseTitle', () => {
+    it('Should return an empty string if a value is not provided', () => {
+      const actual = getInputs(getters).releaseTitle;
+      expect(actual).toStrictEqual('');
+    });
+
+    it('Should return the provided "release-title"', () => {
+      lookup['release-title'] = '<releaseTitle>';
+      const actual = getInputs(getters).releaseTitle;
+      expect(actual).toStrictEqual('<releaseTitle>');
     });
   });
 

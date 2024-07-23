@@ -42,6 +42,8 @@ export async function run() {
       if (e instanceof RequestError && e.status === NOT_FOUND) {
         core.warning(`No releases found in the repo, using "${tagName}" as the current version`);
         currentVersion = semver.parse(tagName);
+      } else {
+        throw e;
       }
     }
 
@@ -115,7 +117,7 @@ export async function run() {
     }
 
     /* Push the git changes */
-    const releaseTags = ['latest', newTag, newTagMinor, newTagMajor];
+    const releaseTags = [inputs.latestTagName, newTag, newTagMinor, newTagMajor];
     if (inputs.dryRun) {
       core.info(`DRY RUN: Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
       if (inputs.enableGitTagging) {
@@ -140,14 +142,32 @@ export async function run() {
 
     /* Create release notes and GitHub Release */
     core.info('Creating GitHub Release');
-    await octokit.rest.repos.createRelease({
+
+    const getReleaseTitle = async (): Promise<string> => {
+      if (inputs.releaseTitle) {
+        return inputs.releaseTitle;
+      }
+      if (inputs.getReleaseTitleFromPr) {
+        const response = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+          ...github.context.repo,
+          commit_sha: github.context.sha,
+        });
+        return response.data[0]?.title || newTag;
+      }
+      return newTag;
+    };
+
+    const releaseDetails = {
       ...github.context.repo,
       tag_name: newTag,
-      name: newTag,
+      name: await getReleaseTitle(),
       body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
       prerelease: false,
       draft: false,
-    });
+    };
+
+    core.debug(`GitHub Release Details: ${JSON.stringify(releaseDetails)}`);
+    await octokit.rest.repos.createRelease(releaseDetails);
 
     /* Set the action outputs */
     core.setOutput('current-version', currentVersion.version);

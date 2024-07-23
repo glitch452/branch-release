@@ -40349,11 +40349,14 @@ function getInputs(getters = core) {
         changelogTitles: { ...DEFAULT_TYPE_TITLES, ...changelogTitles },
         dryRun: getters.getBooleanInput('dry-run'),
         enableGitTagging: !getters.getBooleanInput('disable-git-tagging'),
+        getReleaseTitleFromPr: getters.getBooleanInput('get-release-title-from-pr'),
         githubToken: getters.getInput('github-token', { required: true }),
         gitTagSuffix: getters.getInput('git-tag-suffix'),
+        latestTagName: getters.getInput('latest-tag-name') || 'latest',
         majorTypes: getters.getInput('major-types').split(',').filter(Boolean),
         minorTypes: (getters.getInput('minor-types') || 'feat').split(',').filter(Boolean),
         releaseBranch: getters.getInput('release-branch') || 'release',
+        releaseTitle: getters.getInput('release-title'),
         trackingTag: getters.getInput('tracking-tag') || 'latest-src',
         versionOverride,
     };
@@ -45371,6 +45374,9 @@ async function run() {
                 core.warning(`No releases found in the repo, using "${tagName}" as the current version`);
                 currentVersion = semver_default().parse(tagName);
             }
+            else {
+                throw e;
+            }
         }
         if (!currentVersion) {
             throw new Error(`The tag name "${tagName}" for the latest release is not a valid semver version`);
@@ -45432,7 +45438,7 @@ async function run() {
             }
         }
         /* Push the git changes */
-        const releaseTags = ['latest', newTag, newTagMinor, newTagMajor];
+        const releaseTags = [inputs.latestTagName, newTag, newTagMinor, newTagMajor];
         if (inputs.dryRun) {
             core.info(`DRY RUN: Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
             if (inputs.enableGitTagging) {
@@ -45454,14 +45460,29 @@ async function run() {
         await git.switch('-');
         /* Create release notes and GitHub Release */
         core.info('Creating GitHub Release');
-        await octokit.rest.repos.createRelease({
+        const getReleaseTitle = async () => {
+            if (inputs.releaseTitle) {
+                return inputs.releaseTitle;
+            }
+            if (inputs.getReleaseTitleFromPr) {
+                const response = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+                    ...github.context.repo,
+                    commit_sha: github.context.sha,
+                });
+                return response.data[0]?.title || newTag;
+            }
+            return newTag;
+        };
+        const releaseDetails = {
             ...github.context.repo,
             tag_name: newTag,
-            name: newTag,
+            name: await getReleaseTitle(),
             body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
             prerelease: false,
             draft: false,
-        });
+        };
+        core.debug(`GitHub Release Details: ${JSON.stringify(releaseDetails)}`);
+        await octokit.rest.repos.createRelease(releaseDetails);
         /* Set the action outputs */
         core.setOutput('current-version', currentVersion.version);
         core.setOutput('increment-type', incrementType ?? '');
