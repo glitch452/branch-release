@@ -157,17 +157,17 @@ export async function run() {
       return newTag;
     };
 
-    const releaseTitle = await getReleaseTitle();
-    const changelog = buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes);
-
-    await octokit.rest.repos.createRelease({
+    const releaseDetails = {
       ...github.context.repo,
       tag_name: newTag,
-      name: releaseTitle,
-      body: changelog,
+      name: await getReleaseTitle(),
+      body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
       prerelease: false,
       draft: false,
-    });
+    };
+
+    core.debug(`GitHub Release Details: ${JSON.stringify(releaseDetails)}`);
+    await octokit.rest.repos.createRelease(releaseDetails);
 
     /* Set the action outputs */
     core.setOutput('current-version', currentVersion.version);
