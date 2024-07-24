@@ -59,28 +59,28 @@ describe(buildChangelog.name, () => {
     it('should convert the type into a title when the type is in the titles map', () => {
       const gitHistory: GitLogEntry[] = [{ message: 'feat: Change #1', body: '', hash }];
       const actual = buildChangelog(gitHistory, repoMeta);
-      const expected = `# ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n`;
+      const expected = `## ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n`;
       expect(actual).toStrictEqual(expected);
     });
 
     it('should use the type as the title when the type is not in the titles map', () => {
       const gitHistory: GitLogEntry[] = [{ message: 'not-a-type: Change #1', body: '', hash }];
       const actual = buildChangelog(gitHistory, repoMeta);
-      const expected = `# not-a-type\n- Change #1 ${hashLink}\n`;
+      const expected = `## not-a-type\n- Change #1 ${hashLink}\n`;
       expect(actual).toStrictEqual(expected);
     });
 
     it('should use the given title override', () => {
       const gitHistory: GitLogEntry[] = [{ message: 'feat!: Change #1', body: '', hash }];
       const actual = buildChangelog(gitHistory, repoMeta, { breaking: 'Brk' });
-      const expected = `# Brk\n- Change #1 ${hashLink}\n`;
+      const expected = `## Brk\n- Change #1 ${hashLink}\n`;
       expect(actual).toStrictEqual(expected);
     });
 
     it('should use the fallback title for the breaking type if its not provided in the title map', () => {
       const gitHistory: GitLogEntry[] = [{ message: 'feat!: Change #1', body: '', hash }];
       const actual = buildChangelog(gitHistory, repoMeta, {});
-      const expected = `# BREAKING CHANGES\n- Change #1 ${hashLink}\n`;
+      const expected = `## BREAKING CHANGES\n- Change #1 ${hashLink}\n`;
       expect(actual).toStrictEqual(expected);
     });
 
@@ -90,7 +90,7 @@ describe(buildChangelog.name, () => {
         { message: 'feat: Change #2', body: '', hash },
       ];
       const actual = buildChangelog(gitHistory, repoMeta);
-      const expected = `# ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n- Change #2 ${hashLink}\n`;
+      const expected = `## ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n- Change #2 ${hashLink}\n`;
       expect(actual).toStrictEqual(expected);
     });
 
@@ -102,7 +102,7 @@ describe(buildChangelog.name, () => {
         { message: 'fix: Change #2', body: '', hash },
       ];
       const actual = buildChangelog(gitHistory, repoMeta);
-      const expected = `# ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n- Change #2 ${hashLink}\n\n# ${DEFAULT_TYPE_TITLES.fix}\n- Change #1 ${hashLink}\n- Change #2 ${hashLink}\n`;
+      const expected = `## ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n- Change #2 ${hashLink}\n\n## ${DEFAULT_TYPE_TITLES.fix}\n- Change #1 ${hashLink}\n- Change #2 ${hashLink}\n`;
       expect(actual).toStrictEqual(expected);
     });
 
@@ -113,7 +113,7 @@ describe(buildChangelog.name, () => {
         { message: 'feat: Change #3', body: '', hash },
       ];
       const actual = buildChangelog(gitHistory, repoMeta);
-      const expected = `# ${DEFAULT_TYPE_TITLES.breaking}\n- Change #2 ${hashLink}\n\n# ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n- Change #3 ${hashLink}\n`;
+      const expected = `## ${DEFAULT_TYPE_TITLES.breaking}\n- Change #2 ${hashLink}\n\n## ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n- Change #3 ${hashLink}\n`;
       expect(actual).toStrictEqual(expected);
     });
 
@@ -124,7 +124,7 @@ describe(buildChangelog.name, () => {
         { message: 'random message', body: '', hash },
       ];
       const actual = buildChangelog(gitHistory, repoMeta);
-      const expected = `# ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n- Change #2 ${hashLink}\n`;
+      const expected = `## ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n- Change #2 ${hashLink}\n`;
       expect(actual).toStrictEqual(expected);
     });
 
@@ -135,7 +135,7 @@ describe(buildChangelog.name, () => {
         { message: 'random message', body: '', hash },
       ];
       const actual = buildChangelog(gitHistory, repoMeta);
-      const expected = `# ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n- scope: Change #2 ${hashLink}\n`;
+      const expected = `## ${DEFAULT_TYPE_TITLES.feat}\n- Change #1 ${hashLink}\n- scope: Change #2 ${hashLink}\n`;
       expect(actual).toStrictEqual(expected);
     });
   });
