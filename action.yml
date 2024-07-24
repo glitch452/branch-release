@@ -32,7 +32,7 @@ inputs:
     description: >-
       Attempt to get the PR title from a PR associated to the git sha. If it is found, use the PR title as the release
       title. If not found, fall back to the release tag name. If the `release-title` has a truthy value, it will
-      override this option. Note: The GITHUB_TOKEN requires pull-request: read permissions.
+      override this option. Note: The GITHUB_TOKEN requires `pull-requests: read` permissions.
     default: 'false'
   git-tag-suffix:
     description: A value append to the git tags.
