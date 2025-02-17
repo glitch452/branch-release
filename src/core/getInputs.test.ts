@@ -32,6 +32,7 @@ describe(getInputs.name, () => {
   describe('action.yaml', () => {
     it('Should contain exactly the inputs that are requested in the action', () => {
       const actionFilePath = path.join(import.meta.dirname, '..', '..', 'action.yml');
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       const actionFile = yaml.parse(fs.readFileSync(actionFilePath).toString());
 
       getInputs(getters);
@@ -46,7 +47,7 @@ describe(getInputs.name, () => {
     it('Should return the provided "build-command"', () => {
       lookup['build-command'] = '<buildCommand>';
       const actual = getInputs(getters).buildCommand;
-      expect(actual).toStrictEqual('<buildCommand>');
+      expect(actual).toBe('<buildCommand>');
     });
   });
 
@@ -81,13 +82,13 @@ describe(getInputs.name, () => {
     it('Should return false for "dry-run" if a value is not provided', () => {
       lookup['dry-run'] = '';
       const actual = getInputs(getters).dryRun;
-      expect(actual).toStrictEqual(false);
+      expect(actual).toBe(false);
     });
 
     it('Should return true for "dry-run" if it is set to a true value', () => {
       lookup['dry-run'] = 'true';
       const actual = getInputs(getters).dryRun;
-      expect(actual).toStrictEqual(true);
+      expect(actual).toBe(true);
     });
   });
 
@@ -95,19 +96,19 @@ describe(getInputs.name, () => {
     it('Should return false for enableGitTagging when "disable-git-tagging" is true', () => {
       lookup['disable-git-tagging'] = 'true';
       const actual = getInputs(getters).enableGitTagging;
-      expect(actual).toStrictEqual(false);
+      expect(actual).toBe(false);
     });
 
     it('Should return true for enableGitTagging when "disable-git-tagging" is false', () => {
       lookup['disable-git-tagging'] = 'false';
       const actual = getInputs(getters).enableGitTagging;
-      expect(actual).toStrictEqual(true);
+      expect(actual).toBe(true);
     });
 
     it('Should return true for enableGitTagging when "disable-git-tagging" is not provided', () => {
       lookup['disable-git-tagging'] = '';
       const actual = getInputs(getters).enableGitTagging;
-      expect(actual).toStrictEqual(true);
+      expect(actual).toBe(true);
     });
   });
 
@@ -115,13 +116,13 @@ describe(getInputs.name, () => {
     it('Should return false for "get-release-title-from-pr" if a value is not provided', () => {
       lookup['get-release-title-from-pr'] = '';
       const actual = getInputs(getters).getReleaseTitleFromPr;
-      expect(actual).toStrictEqual(false);
+      expect(actual).toBe(false);
     });
 
     it('Should return true for "get-release-title-from-pr" if it is set to a true value', () => {
       lookup['get-release-title-from-pr'] = 'true';
       const actual = getInputs(getters).getReleaseTitleFromPr;
-      expect(actual).toStrictEqual(true);
+      expect(actual).toBe(true);
     });
   });
 
@@ -136,7 +137,7 @@ describe(getInputs.name, () => {
     it('Should return the provided "github-token"', () => {
       lookup['github-token'] = '<githubToken>';
       const actual = getInputs(getters).githubToken;
-      expect(actual).toStrictEqual('<githubToken>');
+      expect(actual).toBe('<githubToken>');
     });
   });
 
@@ -144,7 +145,7 @@ describe(getInputs.name, () => {
     it('Should return the provided "git-tag-suffix"', () => {
       lookup['git-tag-suffix'] = '<gitTagSuffix>';
       const actual = getInputs(getters).gitTagSuffix;
-      expect(actual).toStrictEqual('<gitTagSuffix>');
+      expect(actual).toBe('<gitTagSuffix>');
     });
   });
 
@@ -152,13 +153,13 @@ describe(getInputs.name, () => {
     it('Should return the default "latest-tag-name" if it is not provided', () => {
       lookup['latest-tag-name'] = '';
       const actual = getInputs(getters).latestTagName;
-      expect(actual).toStrictEqual('latest');
+      expect(actual).toBe('latest');
     });
 
     it('Should return the provided "latest-tag-name"', () => {
       lookup['latest-tag-name'] = '<latestTagName>';
       const actual = getInputs(getters).latestTagName;
-      expect(actual).toStrictEqual('<latestTagName>');
+      expect(actual).toBe('<latestTagName>');
     });
   });
 
@@ -194,26 +195,26 @@ describe(getInputs.name, () => {
     it('Should return the default "release-branch" if it is not provided', () => {
       lookup['release-branch'] = '';
       const actual = getInputs(getters).releaseBranch;
-      expect(actual).toStrictEqual('release');
+      expect(actual).toBe('release');
     });
 
     it('Should return the provided "release-branch"', () => {
       lookup['release-branch'] = '<releaseBranch>';
       const actual = getInputs(getters).releaseBranch;
-      expect(actual).toStrictEqual('<releaseBranch>');
+      expect(actual).toBe('<releaseBranch>');
     });
   });
 
   describe('releaseTitle', () => {
     it('Should return an empty string if a value is not provided', () => {
       const actual = getInputs(getters).releaseTitle;
-      expect(actual).toStrictEqual('');
+      expect(actual).toBe('');
     });
 
     it('Should return the provided "release-title"', () => {
       lookup['release-title'] = '<releaseTitle>';
       const actual = getInputs(getters).releaseTitle;
-      expect(actual).toStrictEqual('<releaseTitle>');
+      expect(actual).toBe('<releaseTitle>');
     });
   });
 
@@ -221,13 +222,13 @@ describe(getInputs.name, () => {
     it('Should return the default "tracking-tag" if it is not provided', () => {
       lookup['tracking-tag'] = '';
       const actual = getInputs(getters).trackingTag;
-      expect(actual).toStrictEqual('latest-src');
+      expect(actual).toBe('latest-src');
     });
 
     it('Should return the provided "tracking-tag"', () => {
       lookup['tracking-tag'] = '<trackingTag>';
       const actual = getInputs(getters).trackingTag;
-      expect(actual).toStrictEqual('<trackingTag>');
+      expect(actual).toBe('<trackingTag>');
     });
   });
 
@@ -235,13 +236,13 @@ describe(getInputs.name, () => {
     it('Should return null if no "version-override" is provided', () => {
       lookup['version-override'] = '';
       const actual = getInputs(getters).versionOverride;
-      expect(actual).toStrictEqual(null);
+      expect(actual).toBeNull();
     });
 
     it('Should return the provided "version-override"', () => {
       lookup['version-override'] = '0.1.2';
       const actual = getInputs(getters).versionOverride?.version;
-      expect(actual).toStrictEqual('0.1.2');
+      expect(actual).toBe('0.1.2');
     });
 
     it('Should throw an error if the "version-override" is not a valid semver value', () => {
