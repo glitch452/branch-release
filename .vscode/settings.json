@@ -36,7 +36,9 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "prettier.prettierPath": "node_modules/prettier",
 
-  "cSpell.enableFiletypes": ["github-actions-workflow"],
+  "cSpell.enabledFileTypes": {
+    "github-actions-workflow": true
+  },
   "cSpell.words": [
     "autofix",
     "chardet",
@@ -51,6 +53,7 @@
     "typecheck",
     "unshallow",
     "unstub",
+    "vite",
     "Vitest",
     "ytanikin"
   ]
