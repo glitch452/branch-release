@@ -66,13 +66,13 @@ export async function run() {
 
       nextVersion = semver.parse(currentVersion.version)?.inc(incrementType);
       if (!nextVersion) {
-        throw new Error(`The current version "${currentVersion}" is not a valid semver value.`);
+        throw new Error(`The current version "${currentVersion.toString()}" is not a valid semver value.`);
       }
     }
 
-    core.info(`Current package version: ${currentVersion}`);
+    core.info(`Current package version: ${currentVersion.toString()}`);
     core.info(`Increment Type: ${incrementType ?? 'N/A'}`);
-    core.info(`Next package version: ${nextVersion}`);
+    core.info(`Next package version: ${nextVersion.toString()}`);
 
     /* Create the new Release commit */
     const newTag = `v${nextVersion.version}${inputs.gitTagSuffix}`;
