@@ -1,12 +1,9 @@
-import * as core from '@actions/core';
 import semver from 'semver';
 import { z } from 'zod';
 import { DEFAULT_TYPE_TITLES } from './constants.js';
+import { Workflow } from 'src/types/Workflow.js';
 
-export type Getters = Pick<typeof core, 'getBooleanInput' | 'getInput' | 'getMultilineInput'>;
-export type InputOptions = core.InputOptions;
-
-export function getInputs(getters: Getters = core) {
+export function getInputs(getters: Pick<Workflow, 'getBooleanInput' | 'getInput' | 'getMultilineInput'>) {
   const originals = {
     changelogTitles: getters.getInput('changelog-titles'),
     versionOverride: getters.getInput('version-override'),
