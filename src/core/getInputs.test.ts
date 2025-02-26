@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/consistent-function-scoping */
-import path from 'path';
-import fs from 'fs';
+import fs from 'node:fs';
+import path from 'node:path';
 import yaml from 'yaml';
 import { DEFAULT_TYPE_TITLES } from './constants.js';
 import { Getters, InputOptions, getInputs } from './getInputs.js';

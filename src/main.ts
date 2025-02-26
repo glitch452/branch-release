@@ -1,12 +1,12 @@
 import * as core from '@actions/core';
-import * as github from '@actions/github';
 import { exec } from '@actions/exec';
+import * as github from '@actions/github';
 import { RequestError } from '@octokit/request-error';
-import { getInputs } from './core/getInputs.js';
 import semver, { ReleaseType, SemVer } from 'semver';
-import { Git } from './io/git.js';
-import { getIncrementType } from './core/getIncrementType.js';
 import { buildChangelog } from './core/buildChangelog.js';
+import { getIncrementType } from './core/getIncrementType.js';
+import { getInputs } from './core/getInputs.js';
+import { Git } from './io/git.js';
 
 const NOT_FOUND = 404;
 const JSON_INDENT = 2;
