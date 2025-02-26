@@ -1,17 +1,24 @@
-import * as core from '@actions/core';
-import { exec } from '@actions/exec';
-import * as github from '@actions/github';
+import { type exec as ActionsExec } from '@actions/exec';
 import { RequestError } from '@octokit/request-error';
 import semver, { ReleaseType, SemVer } from 'semver';
-import { buildChangelog } from './core/buildChangelog.js';
-import { getIncrementType } from './core/getIncrementType.js';
-import { getInputs } from './core/getInputs.js';
-import { Git } from './io/git.js';
+import { buildChangelog } from './buildChangelog.js';
+import { getIncrementType } from './getIncrementType.js';
+import { getInputs } from './getInputs.js';
+import { GitService } from 'src/services/GitService.js';
+import { GitHub } from 'src/types/GitHub.js';
+import { Logger } from 'src/types/Logger.js';
+import { Workflow } from 'src/types/Workflow.js';
 
 const NOT_FOUND = 404;
 const JSON_INDENT = 2;
 
-export async function run() {
+export async function run(
+  logger: Logger,
+  workflow: Workflow,
+  github: GitHub,
+  git: GitService,
+  exec: typeof ActionsExec,
+) {
   try {
     /* Initialization */
     const cwd = process.env.GITHUB_WORKSPACE;
@@ -20,8 +27,7 @@ export async function run() {
         'Unable to retrieve the current working directory using environment variable "GITHUB_WORKSPACE".',
       );
     }
-    const inputs = getInputs();
-    const git = new Git();
+    const inputs = getInputs(workflow);
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     const initialBranch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || github.context.ref;
     const actorEmail = `${process.env.GITHUB_ACTOR_ID}+${github.context.actor}@users.noreply.github.com`;
@@ -40,7 +46,7 @@ export async function run() {
       currentVersion = semver.parse(tagName);
     } catch (error) {
       if (error instanceof RequestError && error.status === NOT_FOUND) {
-        core.warning(`No releases found in the repo, using "${tagName}" as the current version`);
+        logger.warning(`No releases found in the repo, using "${tagName}" as the current version`);
         currentVersion = semver.parse(tagName);
       } else {
         throw error;
@@ -52,13 +58,13 @@ export async function run() {
     }
 
     const gitHistory = await git.getHistory(inputs.trackingTag, github.context.sha);
-    core.debug(`Using git history: ${JSON.stringify(gitHistory, undefined, JSON_INDENT)}`);
+    logger.debug(`Using git history: ${JSON.stringify(gitHistory, undefined, JSON_INDENT)}`);
 
     if (nextVersion) {
       incrementType = semver.diff(currentVersion, nextVersion);
     } else {
       if (!gitHistory.length) {
-        core.info('GitHub SHA matches latest release, exiting.');
+        logger.info('GitHub SHA matches latest release, exiting.');
         return;
       }
 
@@ -70,62 +76,62 @@ export async function run() {
       }
     }
 
-    core.info(`Current package version: ${currentVersion.toString()}`);
-    core.info(`Increment Type: ${incrementType ?? 'N/A'}`);
-    core.info(`Next package version: ${nextVersion.toString()}`);
+    logger.info(`Current package version: ${currentVersion.toString()}`);
+    logger.info(`Increment Type: ${incrementType ?? 'N/A'}`);
+    logger.info(`Next package version: ${nextVersion.toString()}`);
 
     /* Create the new Release commit */
     const newTag = `v${nextVersion.version}${inputs.gitTagSuffix}`;
     const newTagMinor = `v${nextVersion.major}.${nextVersion.minor}${inputs.gitTagSuffix}`;
     const newTagMajor = `v${nextVersion.major}${inputs.gitTagSuffix}`;
 
-    core.debug(`Setting the tracking tag "${inputs.trackingTag}" on the source branch "${initialBranch}".`);
+    logger.debug(`Setting the tracking tag "${inputs.trackingTag}" on the source branch "${initialBranch}".`);
     await git.addTags([inputs.trackingTag]);
 
-    core.debug(`Switching to the release branch "${inputs.releaseBranch}".`);
+    logger.debug(`Switching to the release branch "${inputs.releaseBranch}".`);
     const releaseBranchExists = (await git.getBranches()).all.includes(`remotes/${remote}/${inputs.releaseBranch}`);
     await git.switch(inputs.releaseBranch, { create: !releaseBranchExists });
 
-    core.debug(`Setting git user details: ${JSON.stringify({ actor: github.context.actor, actorEmail })}`);
+    logger.debug(`Setting git user details: ${JSON.stringify({ actor: github.context.actor, actorEmail })}`);
     await git.setUser(github.context.actor, actorEmail);
 
     if (releaseBranchExists) {
-      core.debug(`Creating a merge commit on the release branch "${inputs.releaseBranch}".`);
+      logger.debug(`Creating a merge commit on the release branch "${inputs.releaseBranch}".`);
       await git.merge(initialBranch, `Release ${newTag}`);
     }
 
     if (inputs.buildCommand) {
       if (inputs.dryRun) {
-        core.info(`DRY RUN: Running build command "${inputs.buildCommand}".`);
+        logger.info(`DRY RUN: Running build command "${inputs.buildCommand}".`);
       } else {
         await exec(inputs.buildCommand, [], { cwd });
       }
     }
 
     const status = await git.status();
-    core.debug(`Git status after build: ${JSON.stringify(status, undefined, JSON_INDENT)}`);
+    logger.debug(`Git status after build: ${JSON.stringify(status, undefined, JSON_INDENT)}`);
 
     if (status.isClean) {
-      core.warning('No changes detected after build.');
+      logger.warning('No changes detected after build.');
     } else {
-      core.debug('Creating a new commit with the changes from the build.');
+      logger.debug('Creating a new commit with the changes from the build.');
       await (releaseBranchExists ? git.amendCommitWithAllFiles() : git.commitAllFiles(`Release ${newTag}`));
     }
 
     /* Push the git changes */
     const releaseTags = [inputs.latestTagName, newTag, newTagMinor, newTagMajor];
     if (inputs.dryRun) {
-      core.info(`DRY RUN: Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
+      logger.info(`DRY RUN: Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
       if (inputs.enableGitTagging) {
-        core.info(`DRY RUN: Git tags to be added/updated: ${JSON.stringify(releaseTags)}`);
+        logger.info(`DRY RUN: Git tags to be added/updated: ${JSON.stringify(releaseTags)}`);
       }
-      core.info(`DRY RUN: Pushing tags to "${remote}".`);
+      logger.info(`DRY RUN: Pushing tags to "${remote}".`);
     } else {
-      core.debug(`Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
+      logger.debug(`Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
       await git.pushToRemote({ remote, branch: inputs.releaseBranch });
 
       if (inputs.enableGitTagging) {
-        core.debug(`Setting the git tags on the new commit "${JSON.stringify(releaseTags)}".`);
+        logger.debug(`Setting the git tags on the new commit "${JSON.stringify(releaseTags)}".`);
         await git.addTags(releaseTags);
       }
 
@@ -133,11 +139,11 @@ export async function run() {
       await git.pushTags();
     }
 
-    core.debug('Switch back to the initial branch.');
+    logger.debug('Switch back to the initial branch.');
     await git.switch('-');
 
     /* Create release notes and GitHub Release */
-    core.info('Creating GitHub Release');
+    logger.info('Creating GitHub Release');
 
     const getReleaseTitle = async (): Promise<string> => {
       if (inputs.releaseTitle) {
@@ -162,18 +168,18 @@ export async function run() {
       draft: false,
     };
 
-    core.debug(`GitHub Release Details: ${JSON.stringify(releaseDetails)}`);
+    logger.debug(`GitHub Release Details: ${JSON.stringify(releaseDetails)}`);
     await octokit.rest.repos.createRelease(releaseDetails);
 
     /* Set the action outputs */
-    core.setOutput('current-version', currentVersion.version);
-    core.setOutput('increment-type', incrementType ?? '');
-    core.setOutput('next-version', nextVersion.version);
-    core.setOutput('next-version-major', nextVersion.major);
-    core.setOutput('next-version-minor', nextVersion.minor);
-    core.setOutput('next-version-patch', nextVersion.patch);
+    workflow.setOutput('current-version', currentVersion.version);
+    workflow.setOutput('increment-type', incrementType ?? '');
+    workflow.setOutput('next-version', nextVersion.version);
+    workflow.setOutput('next-version-major', nextVersion.major);
+    workflow.setOutput('next-version-minor', nextVersion.minor);
+    workflow.setOutput('next-version-patch', nextVersion.patch);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
-    core.setFailed(message);
+    workflow.setFailed(message);
   }
 }
