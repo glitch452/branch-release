@@ -12,7 +12,7 @@ export function getInputs(getters: Getters = core) {
     versionOverride: getters.getInput('version-override'),
   };
 
-  const versionOverride = originals.versionOverride ? semver.parse(originals.versionOverride) : null;
+  const versionOverride = originals.versionOverride ? semver.parse(originals.versionOverride) : undefined;
   if (originals.versionOverride && !versionOverride) {
     throw new Error(`The version override "${originals.versionOverride}" is not a valid semver string.`);
   }

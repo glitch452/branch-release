@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/consistent-function-scoping */
 import path from 'path';
 import fs from 'fs';
 import yaml from 'yaml';
@@ -32,7 +33,7 @@ describe(getInputs.name, () => {
   describe('action.yaml', () => {
     it('Should contain exactly the inputs that are requested in the action', () => {
       const actionFilePath = path.join(import.meta.dirname, '..', '..', 'action.yml');
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
+
       const actionFile = yaml.parse(fs.readFileSync(actionFilePath).toString());
 
       getInputs(getters);
@@ -236,7 +237,7 @@ describe(getInputs.name, () => {
     it('Should return null if no "version-override" is provided', () => {
       lookup['version-override'] = '';
       const actual = getInputs(getters).versionOverride;
-      expect(actual).toBeNull();
+      expect(actual).toBeUndefined();
     });
 
     it('Should return the provided "version-override"', () => {

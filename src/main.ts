@@ -30,20 +30,20 @@ export async function run() {
     /* Get the version details */
     const octokit = github.getOctokit(inputs.githubToken);
     let tagName = 'v0.0.0';
-    let currentVersion: SemVer | null = null;
+    let currentVersion: SemVer | null | undefined;
     let nextVersion: SemVer | null | undefined = inputs.versionOverride;
-    let incrementType: ReleaseType | null = null;
+    let incrementType: ReleaseType | null | undefined;
 
     try {
       const latestRelease = (await octokit.rest.repos.getLatestRelease(github.context.repo)).data;
       tagName = latestRelease.tag_name;
       currentVersion = semver.parse(tagName);
-    } catch (e) {
-      if (e instanceof RequestError && e.status === NOT_FOUND) {
+    } catch (error) {
+      if (error instanceof RequestError && error.status === NOT_FOUND) {
         core.warning(`No releases found in the repo, using "${tagName}" as the current version`);
         currentVersion = semver.parse(tagName);
       } else {
-        throw e;
+        throw error;
       }
     }
 
@@ -109,11 +109,7 @@ export async function run() {
       core.warning('No changes detected after build.');
     } else {
       core.debug('Creating a new commit with the changes from the build.');
-      if (releaseBranchExists) {
-        await git.amendCommitWithAllFiles();
-      } else {
-        await git.commitAllFiles(`Release ${newTag}`);
-      }
+      await (releaseBranchExists ? git.amendCommitWithAllFiles() : git.commitAllFiles(`Release ${newTag}`));
     }
 
     /* Push the git changes */
@@ -176,8 +172,8 @@ export async function run() {
     core.setOutput('next-version-major', nextVersion.major);
     core.setOutput('next-version-minor', nextVersion.minor);
     core.setOutput('next-version-patch', nextVersion.patch);
-  } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : String(e);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     core.setFailed(message);
   }
 }

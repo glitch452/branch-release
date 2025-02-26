@@ -1,8 +1,10 @@
 import { buildConfig } from 'eslint-config-spartan';
-import { jsDoc, mdx, prettier, typeEnabled, vitest } from 'eslint-config-spartan/mixins';
+import { jsDoc, mdx, prettier, promise, typeEnabled, unicorn, vitest } from 'eslint-config-spartan/mixins';
 
 export default buildConfig(
   typeEnabled({ parserOptions: { tsconfigRootDir: import.meta.dirname, project: './tsconfig.json' } }),
+  promise,
+  unicorn,
   vitest,
   jsDoc,
   mdx,
