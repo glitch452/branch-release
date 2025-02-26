@@ -1,4 +1,4 @@
-import { InlineConfig } from 'vitest';
+import { InlineConfig } from 'vitest/node';
 import baseConfig from './vite.config.js';
 import { defineConfig } from 'vitest/config';
 
