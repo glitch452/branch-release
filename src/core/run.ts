@@ -143,7 +143,7 @@ export async function run(
     await git.switch('-');
 
     /* Create release notes and GitHub Release */
-    if (inputs.enableGithubRelease) {
+    if (!inputs.dryRun && inputs.enableGithubRelease) {
       logger.info('Creating GitHub Release');
 
       const getReleaseTitle = async (): Promise<string> => {
