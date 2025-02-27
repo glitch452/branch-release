@@ -143,37 +143,39 @@ export async function run(
     await git.switch('-');
 
     /* Create release notes and GitHub Release */
-    logger.info('Creating GitHub Release');
+    if (inputs.enableGithubRelease) {
+      logger.info('Creating GitHub Release');
 
-    const getReleaseTitle = async (): Promise<string> => {
-      if (inputs.releaseTitle) {
-        return inputs.releaseTitle;
-      }
-      if (inputs.getReleaseTitleFromPr) {
-        const response = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
-          ...github.context.repo,
-          commit_sha: github.context.sha,
-        });
-        const releaseTitle = response.data[0]?.title;
-        if (!releaseTitle) {
-          return newTag;
+      const getReleaseTitle = async (): Promise<string> => {
+        if (inputs.releaseTitle) {
+          return inputs.releaseTitle;
         }
-        return inputs.prependVersionToReleaseTitle ? `${newTag} - ${releaseTitle}` : releaseTitle;
-      }
-      return newTag;
-    };
+        if (inputs.getReleaseTitleFromPr) {
+          const response = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+            ...github.context.repo,
+            commit_sha: github.context.sha,
+          });
+          const releaseTitle = response.data[0]?.title;
+          if (!releaseTitle) {
+            return newTag;
+          }
+          return inputs.prependVersionToReleaseTitle ? `${newTag} - ${releaseTitle}` : releaseTitle;
+        }
+        return newTag;
+      };
 
-    const releaseDetails = {
-      ...github.context.repo,
-      tag_name: newTag,
-      name: await getReleaseTitle(),
-      body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
-      prerelease: false,
-      draft: false,
-    };
+      const releaseDetails = {
+        ...github.context.repo,
+        tag_name: newTag,
+        name: await getReleaseTitle(),
+        body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
+        prerelease: false,
+        draft: false,
+      };
 
-    logger.debug(`GitHub Release Details: ${JSON.stringify(releaseDetails)}`);
-    await octokit.rest.repos.createRelease(releaseDetails);
+      logger.debug(`GitHub Release Details: ${JSON.stringify(releaseDetails)}`);
+      await octokit.rest.repos.createRelease(releaseDetails);
+    }
 
     /* Set the action outputs */
     workflow.setOutput('current-version', currentVersion.version);
