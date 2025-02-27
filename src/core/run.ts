@@ -38,13 +38,13 @@ export async function run(
     let tagName = 'v0.0.0';
     let currentVersion: SemVer | null | undefined;
     let nextVersion: SemVer | null | undefined = inputs.versionOverride;
-    let incrementType: ReleaseType | null | undefined;
+    let incrementType: ReleaseType | '';
 
     try {
       const latestRelease = (await octokit.rest.repos.getLatestRelease(github.context.repo)).data;
       tagName = latestRelease.tag_name;
       currentVersion = semver.parse(tagName);
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof RequestError && error.status === NOT_FOUND) {
         logger.warning(`No releases found in the repo, using "${tagName}" as the current version`);
         currentVersion = semver.parse(tagName);
@@ -61,7 +61,7 @@ export async function run(
     logger.debug(`Using git history: ${JSON.stringify(gitHistory, undefined, JSON_INDENT)}`);
 
     if (nextVersion) {
-      incrementType = semver.diff(currentVersion, nextVersion);
+      incrementType = semver.diff(currentVersion, nextVersion) ?? '';
     } else {
       if (!gitHistory.length) {
         logger.info('GitHub SHA matches latest release, exiting.');
@@ -70,14 +70,12 @@ export async function run(
 
       incrementType = getIncrementType(gitHistory, inputs.majorTypes, inputs.minorTypes);
 
-      nextVersion = semver.parse(currentVersion.version)?.inc(incrementType);
-      if (!nextVersion) {
-        throw new Error(`The current version "${currentVersion.toString()}" is not a valid semver value.`);
-      }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- semver.parse with semver object as input returns the same object
+      nextVersion = semver.parse(currentVersion.version)!.inc(incrementType);
     }
 
     logger.info(`Current package version: ${currentVersion.toString()}`);
-    logger.info(`Increment Type: ${incrementType ?? 'N/A'}`);
+    logger.info(`Increment Type: ${incrementType}`);
     logger.info(`Next package version: ${nextVersion.toString()}`);
 
     /* Create the new Release commit */
@@ -179,13 +177,12 @@ export async function run(
 
     /* Set the action outputs */
     workflow.setOutput('current-version', currentVersion.version);
-    workflow.setOutput('increment-type', incrementType ?? '');
+    workflow.setOutput('increment-type', incrementType);
     workflow.setOutput('next-version', nextVersion.version);
     workflow.setOutput('next-version-major', nextVersion.major);
     workflow.setOutput('next-version-minor', nextVersion.minor);
     workflow.setOutput('next-version-patch', nextVersion.patch);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    workflow.setFailed(message);
+    workflow.setFailed(error instanceof Error ? error : String(error));
   }
 }
