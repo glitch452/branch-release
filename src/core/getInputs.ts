@@ -27,6 +27,7 @@ export function getInputs(getters: Pick<Workflow, 'getBooleanInput' | 'getInput'
     latestTagName: getters.getInput('latest-tag-name') || 'latest',
     majorTypes: getters.getInput('major-types').split(',').filter(Boolean),
     minorTypes: (getters.getInput('minor-types') || 'feat').split(',').filter(Boolean),
+    prependVersionToReleaseTitle: getters.getBooleanInput('prepend-version-to-release-title'),
     releaseBranch: getters.getInput('release-branch') || 'release',
     releaseTitle: getters.getInput('release-title'),
     trackingTag: getters.getInput('tracking-tag') || 'latest-src',
