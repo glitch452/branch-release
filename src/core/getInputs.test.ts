@@ -174,6 +174,20 @@ describe(getInputs.name, () => {
     });
   });
 
+  describe('prependVersionToReleaseTitle', () => {
+    it('should return false for "prepend-version-to-release-title" if a value is not provided', () => {
+      workflowMock.clearInputValue('prepend-version-to-release-title');
+      const actual = getInputs(workflowMock).prependVersionToReleaseTitle;
+      expect(actual).toBe(false);
+    });
+
+    it('should return true for "prepend-version-to-release-title" if it is set to a true value', () => {
+      workflowMock.setInputValue('prepend-version-to-release-title', 'true');
+      const actual = getInputs(workflowMock).prependVersionToReleaseTitle;
+      expect(actual).toBe(true);
+    });
+  });
+
   describe('releaseBranch', () => {
     it('Should return the default "release-branch" if it is not provided', () => {
       workflowMock.clearInputValue('release-branch');
