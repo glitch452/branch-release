@@ -61,6 +61,26 @@ describe(getInputs.name, () => {
     });
   });
 
+  describe('enableGithubRelease', () => {
+    it('should return false for enableGithubRelease when "disable-github-release" is true', () => {
+      workflowMock.setInputValue('disable-github-release', 'true');
+      const actual = getInputs(workflowMock).enableGithubRelease;
+      expect(actual).toBe(false);
+    });
+
+    it('should return true for enableGithubRelease when "disable-github-release" is false', () => {
+      workflowMock.setInputValue('disable-github-release', 'false');
+      const actual = getInputs(workflowMock).enableGithubRelease;
+      expect(actual).toBe(true);
+    });
+
+    it('should return true for enableGithubRelease when "disable-github-release" is not provided', () => {
+      workflowMock.clearInputValue('disable-github-release');
+      const actual = getInputs(workflowMock).enableGithubRelease;
+      expect(actual).toBe(true);
+    });
+  });
+
   describe('dry-run', () => {
     it('Should return false for "dry-run" if a value is not provided', () => {
       workflowMock.clearInputValue('dry-run');

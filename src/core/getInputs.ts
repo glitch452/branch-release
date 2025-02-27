@@ -20,6 +20,7 @@ export function getInputs(getters: Pick<Workflow, 'getBooleanInput' | 'getInput'
     buildCommand: getters.getInput('build-command'),
     changelogTitles: { ...DEFAULT_TYPE_TITLES, ...changelogTitles },
     dryRun: getters.getBooleanInput('dry-run'),
+    enableGithubRelease: !getters.getBooleanInput('disable-github-release'),
     enableGitTagging: !getters.getBooleanInput('disable-git-tagging'),
     getReleaseTitleFromPr: getters.getBooleanInput('get-release-title-from-pr'),
     githubToken: getters.getInput('github-token', { required: true }),

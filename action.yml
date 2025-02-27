@@ -25,6 +25,9 @@ inputs:
   disable-git-tagging:
     description: Disable setting and/or updating the git tags.
     default: "false"
+  disable-github-release:
+    description: Create a GitHub Release.
+    default: "false"
   dry-run:
     description: Run the action without actually releasing the package or pushing git tags.
     default: "false"
