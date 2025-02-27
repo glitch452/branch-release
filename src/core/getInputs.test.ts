@@ -13,16 +13,26 @@ describe(getInputs.name, () => {
   });
 
   describe('action.yaml', () => {
+    const actionFilePath = path.join(import.meta.dirname, '..', '..', 'action.yml');
+    const actionFile = yaml.parse(fs.readFileSync(actionFilePath).toString());
+
     it('Should contain exactly the inputs that are requested in the action', () => {
-      const actionFilePath = path.join(import.meta.dirname, '..', '..', 'action.yml');
-
-      const actionFile = yaml.parse(fs.readFileSync(actionFilePath).toString());
-
       getInputs(workflowMock);
 
       const actual = Object.keys(actionFile.inputs).sort();
       const expected = [...workflowMock.requestedInputs].sort();
       expect(actual).toStrictEqual(expected);
+    });
+
+    const requiredInputNames = Object.entries<any>(actionFile.inputs)
+      .filter(([, { required }]) => required)
+      .map(([x]) => x);
+
+    it.each(requiredInputNames)('Should throw an error if the required field "%s" is not provided', (inputName) => {
+      // This ensures that all inputs marked 'required' in the yaml file also have the required flag set on the input options
+      workflowMock.clearInputValue(inputName);
+      const actual = () => getInputs(workflowMock);
+      expect(actual).toThrow(`Value Required for ${inputName}`);
     });
   });
 
@@ -34,7 +44,7 @@ describe(getInputs.name, () => {
     });
   });
 
-  describe('changelog-titles', () => {
+  describe('changelogTitles', () => {
     it('Should return the defaults for "changelog-titles" if a value is not provided', () => {
       workflowMock.clearInputValue('changelog-titles');
       const actual = getInputs(workflowMock).changelogTitles;
@@ -81,7 +91,7 @@ describe(getInputs.name, () => {
     });
   });
 
-  describe('dry-run', () => {
+  describe('dryRun', () => {
     it('Should return false for "dry-run" if a value is not provided', () => {
       workflowMock.clearInputValue('dry-run');
       const actual = getInputs(workflowMock).dryRun;
@@ -115,7 +125,7 @@ describe(getInputs.name, () => {
     });
   });
 
-  describe('get-release-title-from-pr', () => {
+  describe('getReleaseTitleFromPr', () => {
     it('Should return false for "get-release-title-from-pr" if a value is not provided', () => {
       workflowMock.clearInputValue('get-release-title-from-pr');
       const actual = getInputs(workflowMock).getReleaseTitleFromPr;

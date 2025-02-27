@@ -59,7 +59,7 @@ export class GitService {
   }
 
   async addTags(tags: string[]) {
-    return Promise.all(tags.map(async (tag) => this.git.tag([tag, '--force'])));
+    await Promise.all(tags.map(async (tag) => this.git.tag([tag, '--force'])));
   }
 
   async pushTags() {
