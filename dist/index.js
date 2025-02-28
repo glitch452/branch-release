@@ -35584,15 +35584,115 @@ var __webpack_exports__ = {};
 
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(7484);
-// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
-var github = __nccwpck_require__(3228);
 // EXTERNAL MODULE: ./node_modules/@actions/exec/lib/exec.js
 var exec = __nccwpck_require__(5236);
+// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
+var github = __nccwpck_require__(3228);
 // EXTERNAL MODULE: ./node_modules/@octokit/request-error/dist-node/index.js
 var dist_node = __nccwpck_require__(3708);
 // EXTERNAL MODULE: ./node_modules/semver/index.js
 var semver = __nccwpck_require__(2088);
 var semver_default = /*#__PURE__*/__nccwpck_require__.n(semver);
+;// CONCATENATED MODULE: ./src/core/constants.ts
+const DEFAULT_TYPE_TITLES = {
+    breaking: 'BREAKING CHANGES',
+    build: 'Build',
+    chore: 'Chores',
+    ci: 'Continuous Integration',
+    docs: 'Documentation',
+    feat: 'Features',
+    fix: 'Fixes',
+    perf: 'Performance Improvements',
+    refactor: 'Refactoring',
+    revert: 'Reverted Commits',
+    style: 'Code Style and Formatting',
+    test: 'Tests',
+};
+// eslint-disable-next-line security/detect-unsafe-regex -- Not concerned about blocking the event loop
+const CONVENTIONAL_COMMIT_REGEX = /^(?<type>[^(!:]+)(?:\((?<scope>[^)]*)\))?!?:\s*(?<description>.+)$/;
+
+;// CONCATENATED MODULE: ./src/core/git-log-tools.ts
+function createIsMajorChange(majorTypes) {
+    // eslint-disable-next-line security/detect-non-literal-regexp
+    const majorTypesRegex = new RegExp(`^(${majorTypes.map((x) => x.toLowerCase()).join('|')})`);
+    return (entry) => {
+        const message = entry.message.toLowerCase();
+        return !!(message.includes('!:') ||
+            entry.body.includes('BREAKING CHANGE') ||
+            entry.body.includes('BREAKING-CHANGE') ||
+            (majorTypes.length && majorTypesRegex.test(message)));
+    };
+}
+function createIsMinorChange(minorTypes) {
+    // eslint-disable-next-line security/detect-non-literal-regexp
+    const minorTypesRegex = new RegExp(`^(${minorTypes.map((x) => x.toLowerCase()).join('|')})`);
+    return (entry) => {
+        const message = entry.message.toLowerCase();
+        return !!(minorTypes.length && minorTypesRegex.test(message));
+    };
+}
+
+;// CONCATENATED MODULE: ./src/core/buildChangelog.ts
+
+
+const HASH_PREFIX_SIZE = 7;
+function buildChangeLine(description, hash, repoMeta, scope) {
+    const parts = ['-'];
+    if (scope) {
+        parts.push(`${scope}:`);
+    }
+    const hashLink = `([${hash.slice(0, HASH_PREFIX_SIZE)}](https://github.com/${repoMeta.owner}/${repoMeta.repo}/commit/${hash}))`;
+    parts.push(description, hashLink);
+    return parts.join(' ');
+}
+function buildChangelog(gitHistory, repoMeta, typeTitles = DEFAULT_TYPE_TITLES, majorTypes = []) {
+    const isMajorChange = createIsMajorChange(majorTypes);
+    const changesByType = new Map();
+    for (const entry of gitHistory) {
+        const match = CONVENTIONAL_COMMIT_REGEX.exec(entry.message)?.groups;
+        if (!match) {
+            continue;
+        }
+        const { type: _type, scope, description } = match;
+        const type = isMajorChange(entry) ? 'breaking' : _type;
+        const change = buildChangeLine(description, entry.hash, repoMeta, scope);
+        const list = changesByType.get(type);
+        if (list) {
+            list.push(change);
+        }
+        else {
+            changesByType.set(type, [change]);
+        }
+    }
+    const outputLines = [];
+    const breakingChanges = changesByType.get('breaking');
+    if (breakingChanges) {
+        changesByType.delete('breaking');
+        outputLines.push(`## ${typeTitles.breaking || 'BREAKING CHANGES'}`, ...breakingChanges, '');
+    }
+    for (const [type, lines] of changesByType) {
+        outputLines.push(`## ${typeTitles[type] || type}`, ...lines, '');
+    }
+    return outputLines.join('\n');
+}
+
+;// CONCATENATED MODULE: ./src/core/getIncrementType.ts
+
+function getIncrementType(gitHistory, majorTypes, minorTypes) {
+    let incrementType = 'patch';
+    const isMajorChange = createIsMajorChange(majorTypes);
+    const isMinorChange = createIsMinorChange(minorTypes);
+    for (const entry of gitHistory) {
+        if (isMajorChange(entry)) {
+            return 'major';
+        }
+        if (incrementType === 'patch' && isMinorChange(entry)) {
+            incrementType = 'minor';
+        }
+    }
+    return incrementType;
+}
+
 ;// CONCATENATED MODULE: ./node_modules/zod/lib/index.mjs
 var util;
 (function (util) {
@@ -40000,34 +40100,16 @@ var z = /*#__PURE__*/Object.freeze({
 
 
 
-;// CONCATENATED MODULE: ./src/core/constants.ts
-const DEFAULT_TYPE_TITLES = {
-    breaking: 'BREAKING CHANGES',
-    build: 'Build',
-    chore: 'Chores',
-    ci: 'Continuous Integration',
-    docs: 'Documentation',
-    feat: 'Features',
-    fix: 'Fixes',
-    perf: 'Performance Improvements',
-    refactor: 'Refactoring',
-    revert: 'Reverted Commits',
-    style: 'Code Style and Formatting',
-    test: 'Tests',
-};
-const CONVENTIONAL_COMMIT_REGEX = /^(?<type>[^(!:]+)(?:\((?<scope>[^)]*)\))?!?:\s*(?<description>.+)$/;
-
 ;// CONCATENATED MODULE: ./src/core/getInputs.ts
 
 
 
-
-function getInputs(getters = core) {
+function getInputs(getters) {
     const originals = {
         changelogTitles: getters.getInput('changelog-titles'),
         versionOverride: getters.getInput('version-override'),
     };
-    const versionOverride = originals.versionOverride ? semver_default().parse(originals.versionOverride) : null;
+    const versionOverride = originals.versionOverride ? semver_default().parse(originals.versionOverride) : undefined;
     if (originals.versionOverride && !versionOverride) {
         throw new Error(`The version override "${originals.versionOverride}" is not a valid semver string.`);
     }
@@ -40036,6 +40118,7 @@ function getInputs(getters = core) {
         buildCommand: getters.getInput('build-command'),
         changelogTitles: { ...DEFAULT_TYPE_TITLES, ...changelogTitles },
         dryRun: getters.getBooleanInput('dry-run'),
+        enableGithubRelease: !getters.getBooleanInput('disable-github-release'),
         enableGitTagging: !getters.getBooleanInput('disable-git-tagging'),
         getReleaseTitleFromPr: getters.getBooleanInput('get-release-title-from-pr'),
         githubToken: getters.getInput('github-token', { required: true }),
@@ -40043,12 +40126,170 @@ function getInputs(getters = core) {
         latestTagName: getters.getInput('latest-tag-name') || 'latest',
         majorTypes: getters.getInput('major-types').split(',').filter(Boolean),
         minorTypes: (getters.getInput('minor-types') || 'feat').split(',').filter(Boolean),
+        prependVersionToReleaseTitle: getters.getBooleanInput('prepend-version-to-release-title'),
         releaseBranch: getters.getInput('release-branch') || 'release',
         releaseTitle: getters.getInput('release-title'),
         trackingTag: getters.getInput('tracking-tag') || 'latest-src',
         versionOverride,
     };
     return inputs;
+}
+
+;// CONCATENATED MODULE: ./src/core/run.ts
+
+
+
+
+
+const NOT_FOUND = 404;
+const JSON_INDENT = 2;
+async function run(logger, workflow, github, git, exec) {
+    try {
+        /* Initialization */
+        const cwd = process.env.GITHUB_WORKSPACE;
+        if (!cwd) {
+            throw new Error('Unable to retrieve the current working directory using environment variable "GITHUB_WORKSPACE".');
+        }
+        const inputs = getInputs(workflow);
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+        const initialBranch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || github.context.ref;
+        const actorEmail = `${process.env.GITHUB_ACTOR_ID}+${github.context.actor}@users.noreply.github.com`;
+        const remote = 'origin';
+        /* Get the version details */
+        const octokit = github.getOctokit(inputs.githubToken);
+        let tagName = 'v0.0.0';
+        let currentVersion;
+        let nextVersion = inputs.versionOverride;
+        let incrementType;
+        try {
+            const latestRelease = (await octokit.rest.repos.getLatestRelease(github.context.repo)).data;
+            tagName = latestRelease.tag_name;
+            currentVersion = semver_default().parse(tagName);
+        }
+        catch (error) {
+            if (error instanceof dist_node.RequestError && error.status === NOT_FOUND) {
+                logger.warning(`No releases found in the repo, using "${tagName}" as the current version`);
+                currentVersion = semver_default().parse(tagName);
+            }
+            else {
+                throw error;
+            }
+        }
+        if (!currentVersion) {
+            throw new Error(`The tag name "${tagName}" for the latest release is not a valid semver version`);
+        }
+        const gitHistory = await git.getHistory(inputs.trackingTag, github.context.sha);
+        logger.debug(`Using git history: ${JSON.stringify(gitHistory, undefined, JSON_INDENT)}`);
+        if (nextVersion) {
+            incrementType = semver_default().diff(currentVersion, nextVersion) ?? '';
+        }
+        else {
+            if (!gitHistory.length) {
+                logger.info('GitHub SHA matches latest release, exiting.');
+                return;
+            }
+            incrementType = getIncrementType(gitHistory, inputs.majorTypes, inputs.minorTypes);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- semver.parse with semver object as input returns the same object
+            nextVersion = semver_default().parse(currentVersion.version).inc(incrementType);
+        }
+        logger.info(`Current package version: ${currentVersion.toString()}`);
+        logger.info(`Increment Type: ${incrementType}`);
+        logger.info(`Next package version: ${nextVersion.toString()}`);
+        /* Create the new Release commit */
+        const newTag = `v${nextVersion.version}${inputs.gitTagSuffix}`;
+        const newTagMinor = `v${nextVersion.major}.${nextVersion.minor}${inputs.gitTagSuffix}`;
+        const newTagMajor = `v${nextVersion.major}${inputs.gitTagSuffix}`;
+        logger.debug(`Setting the tracking tag "${inputs.trackingTag}" on the source branch "${initialBranch}".`);
+        await git.addTags([inputs.trackingTag]);
+        logger.debug(`Switching to the release branch "${inputs.releaseBranch}".`);
+        const releaseBranchExists = (await git.getBranches()).all.includes(`remotes/${remote}/${inputs.releaseBranch}`);
+        await git.switch(inputs.releaseBranch, { create: !releaseBranchExists });
+        logger.debug(`Setting git user details: ${JSON.stringify({ actor: github.context.actor, actorEmail })}`);
+        await git.setUser(github.context.actor, actorEmail);
+        if (releaseBranchExists) {
+            logger.debug(`Creating a merge commit on the release branch "${inputs.releaseBranch}".`);
+            await git.merge(initialBranch, `Release ${newTag}`);
+        }
+        if (inputs.buildCommand) {
+            if (inputs.dryRun) {
+                logger.info(`DRY RUN: Running build command "${inputs.buildCommand}".`);
+            }
+            else {
+                await exec(inputs.buildCommand, [], { cwd });
+            }
+        }
+        const status = await git.status();
+        logger.debug(`Git status after build: ${JSON.stringify(status, undefined, JSON_INDENT)}`);
+        if (status.isClean) {
+            logger.warning('No changes detected after build.');
+        }
+        else {
+            logger.debug('Creating a new commit with the changes from the build.');
+            await (releaseBranchExists ? git.amendCommitWithAllFiles() : git.commitAllFiles(`Release ${newTag}`));
+        }
+        /* Push the git changes */
+        const releaseTags = [inputs.latestTagName, newTag, newTagMinor, newTagMajor];
+        if (inputs.dryRun) {
+            logger.info(`DRY RUN: Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
+            if (inputs.enableGitTagging) {
+                logger.info(`DRY RUN: Git tags to be added/updated: ${JSON.stringify(releaseTags)}`);
+            }
+            logger.info(`DRY RUN: Pushing tags to "${remote}".`);
+        }
+        else {
+            logger.debug(`Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
+            await git.pushToRemote({ remote, branch: inputs.releaseBranch });
+            if (inputs.enableGitTagging) {
+                logger.debug(`Setting the git tags on the new commit "${JSON.stringify(releaseTags)}".`);
+                await git.addTags(releaseTags);
+            }
+            // Push tags even when git tagging is disabled to always push the src tracking tag
+            await git.pushTags();
+        }
+        logger.debug('Switch back to the initial branch.');
+        await git.switch('-');
+        /* Create release notes and GitHub Release */
+        if (!inputs.dryRun && inputs.enableGithubRelease) {
+            logger.info('Creating GitHub Release');
+            const getReleaseTitle = async () => {
+                if (inputs.releaseTitle) {
+                    return inputs.releaseTitle;
+                }
+                if (inputs.getReleaseTitleFromPr) {
+                    const response = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+                        ...github.context.repo,
+                        commit_sha: github.context.sha,
+                    });
+                    const releaseTitle = response.data[0]?.title;
+                    if (!releaseTitle) {
+                        return newTag;
+                    }
+                    return inputs.prependVersionToReleaseTitle ? `${newTag} - ${releaseTitle}` : releaseTitle;
+                }
+                return newTag;
+            };
+            const releaseDetails = {
+                ...github.context.repo,
+                tag_name: newTag,
+                name: await getReleaseTitle(),
+                body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
+                prerelease: false,
+                draft: false,
+            };
+            logger.debug(`GitHub Release Details: ${JSON.stringify(releaseDetails)}`);
+            await octokit.rest.repos.createRelease(releaseDetails);
+        }
+        /* Set the action outputs */
+        workflow.setOutput('current-version', currentVersion.version);
+        workflow.setOutput('increment-type', incrementType);
+        workflow.setOutput('next-version', nextVersion.version);
+        workflow.setOutput('next-version-major', nextVersion.major);
+        workflow.setOutput('next-version-minor', nextVersion.minor);
+        workflow.setOutput('next-version-patch', nextVersion.patch);
+    }
+    catch (error) {
+        workflow.setFailed(error instanceof Error ? error : String(error));
+    }
 }
 
 // EXTERNAL MODULE: ./node_modules/@kwsites/file-exists/dist/index.js
@@ -44859,12 +45100,13 @@ var esm_default = (/* unused pure expression or super */ null && (gitInstanceFac
 
 //# sourceMappingURL=index.js.map
 
-;// CONCATENATED MODULE: ./src/io/git.ts
+;// CONCATENATED MODULE: ./src/services/GitService.ts
 
-
-class git_Git {
+class GitService {
+    logger;
     git;
-    constructor(git = simpleGit()) {
+    constructor(logger, git = simpleGit()) {
+        this.logger = logger;
         this.git = git;
     }
     async setUser(userName, email) {
@@ -44894,7 +45136,7 @@ class git_Git {
         return this.git.merge(args);
     }
     async addTags(tags) {
-        return Promise.all(tags.map(async (tag) => this.git.tag([tag, '--force'])));
+        await Promise.all(tags.map(async (tag) => this.git.tag([tag, '--force'])));
     }
     async pushTags() {
         return this.git.pushTags(['--force']);
@@ -44915,7 +45157,7 @@ class git_Git {
         const tags = await this.git.tags();
         let fromSha;
         const isShallow = (await this.git.revparse(['--is-shallow-repository'])).trim() === 'true';
-        core.debug(`Repository is Shallow: ${isShallow}`);
+        this.logger.debug(`Repository is Shallow: ${isShallow}`);
         if (tags.all.includes(trackingTag)) {
             if (isShallow) {
                 await this.git.fetch(['--shallow-exclude', trackingTag]);
@@ -44925,12 +45167,12 @@ class git_Git {
             fromSha = (await this.git.raw(['rev-list', '-n', '1', trackingTag])).trim();
         }
         else {
-            core.info(`Tracking tag "${trackingTag}" was not found in the git history, retrieving the full history.`);
+            this.logger.info(`Tracking tag "${trackingTag}" was not found in the git history, retrieving the full history.`);
             if (isShallow) {
                 await this.git.fetch(['--unshallow']);
             }
         }
-        core.debug(`Git History Details: ${JSON.stringify({ trackingTag, fromSha, toSha: newCommitSha })}`);
+        this.logger.debug(`Git History Details: ${JSON.stringify({ trackingTag, fromSha, toSha: newCommitSha })}`);
         if (fromSha === newCommitSha) {
             return [];
         }
@@ -44940,253 +45182,16 @@ class git_Git {
     }
 }
 
-;// CONCATENATED MODULE: ./src/core/git-log-tools.ts
-function createIsMajorChange(majorTypes) {
-    const majorTypesRegex = new RegExp(`^(${majorTypes.map((x) => x.toLowerCase()).join('|')})`);
-    return (entry) => {
-        const message = entry.message.toLowerCase();
-        return !!(message.includes('!:') ||
-            entry.body.includes('BREAKING CHANGE') ||
-            entry.body.includes('BREAKING-CHANGE') ||
-            (majorTypes.length && majorTypesRegex.test(message)));
-    };
-}
-function createIsMinorChange(minorTypes) {
-    const minorTypesRegex = new RegExp(`^(${minorTypes.map((x) => x.toLowerCase()).join('|')})`);
-    return (entry) => {
-        const message = entry.message.toLowerCase();
-        return !!(minorTypes.length && minorTypesRegex.test(message));
-    };
-}
-
-;// CONCATENATED MODULE: ./src/core/getIncrementType.ts
-
-function getIncrementType(gitHistory, majorTypes, minorTypes) {
-    let incrementType = 'patch';
-    const isMajorChange = createIsMajorChange(majorTypes);
-    const isMinorChange = createIsMinorChange(minorTypes);
-    for (const entry of gitHistory) {
-        if (isMajorChange(entry)) {
-            return 'major';
-        }
-        if (incrementType === 'patch' && isMinorChange(entry)) {
-            incrementType = 'minor';
-        }
-    }
-    return incrementType;
-}
-
-;// CONCATENATED MODULE: ./src/core/buildChangelog.ts
-
-
-const HASH_PREFIX_SIZE = 7;
-function buildChangeLine(description, hash, repoMeta, scope) {
-    const parts = ['-'];
-    if (scope) {
-        parts.push(`${scope}:`);
-    }
-    const hashLink = `([${hash.slice(0, HASH_PREFIX_SIZE)}](https://github.com/${repoMeta.owner}/${repoMeta.repo}/commit/${hash}))`;
-    parts.push(description, hashLink);
-    return parts.join(' ');
-}
-function buildChangelog(gitHistory, repoMeta, typeTitles = DEFAULT_TYPE_TITLES, majorTypes = []) {
-    const isMajorChange = createIsMajorChange(majorTypes);
-    const changesByType = new Map();
-    for (const entry of gitHistory) {
-        const match = CONVENTIONAL_COMMIT_REGEX.exec(entry.message)?.groups;
-        if (!match) {
-            continue;
-        }
-        const { type: _type, scope, description } = match;
-        const type = isMajorChange(entry) ? 'breaking' : _type;
-        const change = buildChangeLine(description, entry.hash, repoMeta, scope);
-        const list = changesByType.get(type);
-        if (list) {
-            list.push(change);
-        }
-        else {
-            changesByType.set(type, [change]);
-        }
-    }
-    const outputLines = [];
-    const breakingChanges = changesByType.get('breaking');
-    if (breakingChanges) {
-        changesByType.delete('breaking');
-        outputLines.push(`## ${typeTitles.breaking ? typeTitles.breaking : 'BREAKING CHANGES'}`, ...breakingChanges, '');
-    }
-    for (const [type, lines] of changesByType) {
-        outputLines.push(`## ${typeTitles[type] ? typeTitles[type] : type}`, ...lines, '');
-    }
-    return outputLines.join('\n');
-}
-
-;// CONCATENATED MODULE: ./src/main.ts
-
-
-
-
-
-
-
-
-
-const NOT_FOUND = 404;
-const JSON_INDENT = 2;
-async function run() {
-    try {
-        /* Initialization */
-        const cwd = process.env.GITHUB_WORKSPACE;
-        if (!cwd) {
-            throw new Error('Unable to retrieve the current working directory using environment variable "GITHUB_WORKSPACE".');
-        }
-        const inputs = getInputs();
-        const git = new git_Git();
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-        const initialBranch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || github.context.ref;
-        const actorEmail = `${process.env.GITHUB_ACTOR_ID}+${github.context.actor}@users.noreply.github.com`;
-        const remote = 'origin';
-        /* Get the version details */
-        const octokit = github.getOctokit(inputs.githubToken);
-        let tagName = 'v0.0.0';
-        let currentVersion = null;
-        let nextVersion = inputs.versionOverride;
-        let incrementType = null;
-        try {
-            const latestRelease = (await octokit.rest.repos.getLatestRelease(github.context.repo)).data;
-            tagName = latestRelease.tag_name;
-            currentVersion = semver_default().parse(tagName);
-        }
-        catch (e) {
-            if (e instanceof dist_node.RequestError && e.status === NOT_FOUND) {
-                core.warning(`No releases found in the repo, using "${tagName}" as the current version`);
-                currentVersion = semver_default().parse(tagName);
-            }
-            else {
-                throw e;
-            }
-        }
-        if (!currentVersion) {
-            throw new Error(`The tag name "${tagName}" for the latest release is not a valid semver version`);
-        }
-        const gitHistory = await git.getHistory(inputs.trackingTag, github.context.sha);
-        core.debug(`Using git history: ${JSON.stringify(gitHistory, undefined, JSON_INDENT)}`);
-        if (nextVersion) {
-            incrementType = semver_default().diff(currentVersion, nextVersion);
-        }
-        else {
-            if (!gitHistory.length) {
-                core.info('GitHub SHA matches latest release, exiting.');
-                return;
-            }
-            incrementType = getIncrementType(gitHistory, inputs.majorTypes, inputs.minorTypes);
-            nextVersion = semver_default().parse(currentVersion.version)?.inc(incrementType);
-            if (!nextVersion) {
-                throw new Error(`The current version "${currentVersion}" is not a valid semver value.`);
-            }
-        }
-        core.info(`Current package version: ${currentVersion}`);
-        core.info(`Increment Type: ${incrementType ?? 'N/A'}`);
-        core.info(`Next package version: ${nextVersion}`);
-        /* Create the new Release commit */
-        const newTag = `v${nextVersion.version}${inputs.gitTagSuffix}`;
-        const newTagMinor = `v${nextVersion.major}.${nextVersion.minor}${inputs.gitTagSuffix}`;
-        const newTagMajor = `v${nextVersion.major}${inputs.gitTagSuffix}`;
-        core.debug(`Setting the tracking tag "${inputs.trackingTag}" on the source branch "${initialBranch}".`);
-        await git.addTags([inputs.trackingTag]);
-        core.debug(`Switching to the release branch "${inputs.releaseBranch}".`);
-        const releaseBranchExists = (await git.getBranches()).all.includes(`remotes/${remote}/${inputs.releaseBranch}`);
-        await git.switch(inputs.releaseBranch, { create: !releaseBranchExists });
-        core.debug(`Setting git user details: ${JSON.stringify({ actor: github.context.actor, actorEmail })}`);
-        await git.setUser(github.context.actor, actorEmail);
-        if (releaseBranchExists) {
-            core.debug(`Creating a merge commit on the release branch "${inputs.releaseBranch}".`);
-            await git.merge(initialBranch, `Release ${newTag}`);
-        }
-        if (inputs.buildCommand) {
-            if (inputs.dryRun) {
-                core.info(`DRY RUN: Running build command "${inputs.buildCommand}".`);
-            }
-            else {
-                await (0,exec.exec)(inputs.buildCommand, [], { cwd });
-            }
-        }
-        const status = await git.status();
-        core.debug(`Git status after build: ${JSON.stringify(status, undefined, JSON_INDENT)}`);
-        if (status.isClean) {
-            core.warning('No changes detected after build.');
-        }
-        else {
-            core.debug('Creating a new commit with the changes from the build.');
-            if (releaseBranchExists) {
-                await git.amendCommitWithAllFiles();
-            }
-            else {
-                await git.commitAllFiles(`Release ${newTag}`);
-            }
-        }
-        /* Push the git changes */
-        const releaseTags = [inputs.latestTagName, newTag, newTagMinor, newTagMajor];
-        if (inputs.dryRun) {
-            core.info(`DRY RUN: Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
-            if (inputs.enableGitTagging) {
-                core.info(`DRY RUN: Git tags to be added/updated: ${JSON.stringify(releaseTags)}`);
-            }
-            core.info(`DRY RUN: Pushing tags to "${remote}".`);
-        }
-        else {
-            core.debug(`Push the new commit to ${JSON.stringify({ remote, branch: inputs.releaseBranch })}`);
-            await git.pushToRemote({ remote, branch: inputs.releaseBranch });
-            if (inputs.enableGitTagging) {
-                core.debug(`Setting the git tags on the new commit "${JSON.stringify(releaseTags)}".`);
-                await git.addTags(releaseTags);
-            }
-            // Push tags even when git tagging is disabled to always push the src tracking tag
-            await git.pushTags();
-        }
-        core.debug('Switch back to the initial branch.');
-        await git.switch('-');
-        /* Create release notes and GitHub Release */
-        core.info('Creating GitHub Release');
-        const getReleaseTitle = async () => {
-            if (inputs.releaseTitle) {
-                return inputs.releaseTitle;
-            }
-            if (inputs.getReleaseTitleFromPr) {
-                const response = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
-                    ...github.context.repo,
-                    commit_sha: github.context.sha,
-                });
-                return response.data[0]?.title || newTag;
-            }
-            return newTag;
-        };
-        const releaseDetails = {
-            ...github.context.repo,
-            tag_name: newTag,
-            name: await getReleaseTitle(),
-            body: buildChangelog(gitHistory, github.context.repo, inputs.changelogTitles, inputs.majorTypes),
-            prerelease: false,
-            draft: false,
-        };
-        core.debug(`GitHub Release Details: ${JSON.stringify(releaseDetails)}`);
-        await octokit.rest.repos.createRelease(releaseDetails);
-        /* Set the action outputs */
-        core.setOutput('current-version', currentVersion.version);
-        core.setOutput('increment-type', incrementType ?? '');
-        core.setOutput('next-version', nextVersion.version);
-        core.setOutput('next-version-major', nextVersion.major);
-        core.setOutput('next-version-minor', nextVersion.minor);
-        core.setOutput('next-version-patch', nextVersion.patch);
-    }
-    catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
-        core.setFailed(message);
-    }
-}
-
 ;// CONCATENATED MODULE: ./src/index.ts
 
-void run();
+
+
+
+
+const logger = core;
+const workflow = core;
+const git = new GitService(logger);
+void run(logger, workflow, github, git, exec.exec);
 
 
 //# sourceMappingURL=index.js.map

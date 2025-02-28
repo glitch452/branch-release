@@ -1,8 +1,31 @@
-import * as core from '@actions/core';
 import { DefaultLogFields, ListLogLine, SimpleGit, simpleGit } from 'simple-git';
+import { Logger } from 'src/types/Logger.js';
 
-export class Git {
-  constructor(private readonly git: SimpleGit = simpleGit()) {}
+export type Git = Pick<
+  SimpleGit,
+  | 'add'
+  | 'addConfig'
+  | 'branch'
+  | 'commit'
+  | 'fetch'
+  | 'log'
+  | 'merge'
+  | 'push'
+  | 'pushTags'
+  | 'raw'
+  | 'revparse'
+  | 'status'
+  | 'tag'
+  | 'tags'
+>;
+
+export type GitHistoryEntry = DefaultLogFields & ListLogLine;
+
+export class GitService {
+  constructor(
+    private readonly logger: Logger,
+    private readonly git: Git = simpleGit(),
+  ) {}
 
   async setUser(userName: string, email: string) {
     await this.git.addConfig('user.name', userName, false, 'local');
@@ -36,7 +59,7 @@ export class Git {
   }
 
   async addTags(tags: string[]) {
-    return Promise.all(tags.map(async (tag) => this.git.tag([tag, '--force'])));
+    await Promise.all(tags.map(async (tag) => this.git.tag([tag, '--force'])));
   }
 
   async pushTags() {
@@ -57,13 +80,13 @@ export class Git {
     return this.git.commit(message);
   }
 
-  async getHistory(trackingTag: string, newCommitSha: string): Promise<readonly (DefaultLogFields & ListLogLine)[]> {
+  async getHistory(trackingTag: string, newCommitSha: string): Promise<readonly GitHistoryEntry[]> {
     await this.git.fetch(['--tags']);
     const tags = await this.git.tags();
 
     let fromSha: string | undefined;
     const isShallow = (await this.git.revparse(['--is-shallow-repository'])).trim() === 'true';
-    core.debug(`Repository is Shallow: ${isShallow}`);
+    this.logger.debug(`Repository is Shallow: ${isShallow}`);
 
     if (tags.all.includes(trackingTag)) {
       if (isShallow) {
@@ -74,13 +97,13 @@ export class Git {
 
       fromSha = (await this.git.raw(['rev-list', '-n', '1', trackingTag])).trim();
     } else {
-      core.info(`Tracking tag "${trackingTag}" was not found in the git history, retrieving the full history.`);
+      this.logger.info(`Tracking tag "${trackingTag}" was not found in the git history, retrieving the full history.`);
       if (isShallow) {
         await this.git.fetch(['--unshallow']);
       }
     }
 
-    core.debug(`Git History Details: ${JSON.stringify({ trackingTag, fromSha, toSha: newCommitSha })}`);
+    this.logger.debug(`Git History Details: ${JSON.stringify({ trackingTag, fromSha, toSha: newCommitSha })}`);
 
     if (fromSha === newCommitSha) {
       return [];

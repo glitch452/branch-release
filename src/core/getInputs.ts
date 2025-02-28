@@ -1,18 +1,15 @@
-import * as core from '@actions/core';
 import semver from 'semver';
 import { z } from 'zod';
 import { DEFAULT_TYPE_TITLES } from './constants.js';
+import { Workflow } from 'src/types/Workflow.js';
 
-export type Getters = Pick<typeof core, 'getBooleanInput' | 'getInput' | 'getMultilineInput'>;
-export type InputOptions = core.InputOptions;
-
-export function getInputs(getters: Getters = core) {
+export function getInputs(getters: Pick<Workflow, 'getBooleanInput' | 'getInput' | 'getMultilineInput'>) {
   const originals = {
     changelogTitles: getters.getInput('changelog-titles'),
     versionOverride: getters.getInput('version-override'),
   };
 
-  const versionOverride = originals.versionOverride ? semver.parse(originals.versionOverride) : null;
+  const versionOverride = originals.versionOverride ? semver.parse(originals.versionOverride) : undefined;
   if (originals.versionOverride && !versionOverride) {
     throw new Error(`The version override "${originals.versionOverride}" is not a valid semver string.`);
   }
@@ -23,6 +20,7 @@ export function getInputs(getters: Getters = core) {
     buildCommand: getters.getInput('build-command'),
     changelogTitles: { ...DEFAULT_TYPE_TITLES, ...changelogTitles },
     dryRun: getters.getBooleanInput('dry-run'),
+    enableGithubRelease: !getters.getBooleanInput('disable-github-release'),
     enableGitTagging: !getters.getBooleanInput('disable-git-tagging'),
     getReleaseTitleFromPr: getters.getBooleanInput('get-release-title-from-pr'),
     githubToken: getters.getInput('github-token', { required: true }),
@@ -30,6 +28,7 @@ export function getInputs(getters: Getters = core) {
     latestTagName: getters.getInput('latest-tag-name') || 'latest',
     majorTypes: getters.getInput('major-types').split(',').filter(Boolean),
     minorTypes: (getters.getInput('minor-types') || 'feat').split(',').filter(Boolean),
+    prependVersionToReleaseTitle: getters.getBooleanInput('prepend-version-to-release-title'),
     releaseBranch: getters.getInput('release-branch') || 'release',
     releaseTitle: getters.getInput('release-title'),
     trackingTag: getters.getInput('tracking-tag') || 'latest-src',

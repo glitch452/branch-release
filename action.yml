@@ -1,6 +1,6 @@
 name: Branch Release
 author: David Dearden
-description:
+description: >-
   Automate the release of code where the dist files need to published to a GitHub branch. Use Conventional Commits to
   automatically update the release version and create GitHub release notes, then build and push to the release branch
   with git tags.
@@ -19,21 +19,24 @@ inputs:
   build-command:
     description: The command to build the dist files for the project (ex. npm run build)
   changelog-titles:
-    description:
-      'A JSON encoded object, mapping the conventional commit type to the section title to use in the changelog for that
-      type. These values will be merged into and override the default titles. (ex. `{ "feat": "New Features" }`)'
+    description: >-
+      A JSON encoded object, mapping the conventional commit type to the section title to use in the changelog for that
+      type. These values will be merged into and override the default titles. (ex. `{ "feat": "New Features" }`)
   disable-git-tagging:
     description: Disable setting and/or updating the git tags.
-    default: 'false'
+    default: "false"
+  disable-github-release:
+    description: Create a GitHub Release.
+    default: "false"
   dry-run:
     description: Run the action without actually releasing the package or pushing git tags.
-    default: 'false'
+    default: "false"
   get-release-title-from-pr:
     description: >-
       Attempt to get the PR title from a PR associated to the git sha. If it is found, use the PR title as the release
       title. If not found, fall back to the release tag name. If the `release-title` has a truthy value, it will
       override this option. Note: The GITHUB_TOKEN requires `pull-requests: read` permissions.
-    default: 'false'
+    default: "false"
   git-tag-suffix:
     description: A value append to the git tags.
   latest-tag-name:
@@ -42,8 +45,12 @@ inputs:
   major-types:
     description: A comma-separated list of conventional commit types that trigger a major version change.
   minor-types:
-    description:
+    description: >-
       A comma-separated list of conventional commit types that trigger a minor version change. It defaults to `feat`
+  prepend-version-to-release-title:
+    description: >-
+      Whether to prepend the release version to the release title. Note: this only applies when
+      `get-release-title-from-pr` is `true`.
   release-branch:
     description: The name of the branch to publish the release to.
     default: release
@@ -54,7 +61,7 @@ inputs:
     description: The name of the tag to put on the source branch to track the source of the latest Release.
     default: latest-src
   version-override:
-    description:
+    description: >-
       The version to use for publishing the package instead of determining the version using conventional commits.
 
 outputs:
