@@ -51,6 +51,7 @@ inputs:
     description: >-
       Whether to prepend the release version to the release title. Note: this only applies when
       `get-release-title-from-pr` is `true`.
+    default: "false"
   release-branch:
     description: The name of the branch to publish the release to.
     default: release
