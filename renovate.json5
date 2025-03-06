@@ -48,5 +48,12 @@
       minimumReleaseAge: '3 months',
       internalChecksFilter: 'strict',
     },
+    // Ignore these. Keep them at the end of the packageRules to maintain precedence.
+    {
+      enabled: false,
+      matchManagers: ['npm'],
+      matchUpdateTypes: ['major'],
+      matchPackageNames: ['eslint'],
+    },
   ],
 }
