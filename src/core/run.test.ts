@@ -453,4 +453,25 @@ describe(run.name, () => {
     const expected = expect.objectContaining({ ...gitHubMock.context.repo, commit_sha: gitHubMock.context.sha });
     expect(listPullRequestsAssociatedWithCommitSpy).toHaveBeenCalledExactlyOnceWith(expected);
   });
+
+  it('should log a warning when there is a build command provided and there are no changes detected', async () => {
+    workflow.setInputValue('build-command', '<buildCommand>');
+    vi.spyOn(git, 'status').mockResolvedValue({ isClean: true } as any);
+    await run(loggerMock, workflow, gitHubMock, git, execMock);
+    expect(loggerMock.warning).toHaveBeenCalledWith(expect.stringContaining('No changes'));
+  });
+
+  it('should not log a warning when there is a build command provided and there are changes detected', async () => {
+    workflow.setInputValue('build-command', '<buildCommand>');
+    vi.spyOn(git, 'status').mockResolvedValue({ isClean: false } as any);
+    await run(loggerMock, workflow, gitHubMock, git, execMock);
+    expect(loggerMock.warning).not.toHaveBeenCalled();
+  });
+
+  it('should not log a warning when there is no build command provided and there are no changes detected', async () => {
+    workflow.clearInputValue('build-command');
+    vi.spyOn(git, 'status').mockResolvedValue({ isClean: true } as any);
+    await run(loggerMock, workflow, gitHubMock, git, execMock);
+    expect(loggerMock.warning).not.toHaveBeenCalled();
+  });
 });
