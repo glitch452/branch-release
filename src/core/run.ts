@@ -109,11 +109,11 @@ export async function run(
     const status = await git.status();
     logger.debug(`Git status after build: ${JSON.stringify(status, undefined, JSON_INDENT)}`);
 
-    if (status.isClean) {
-      logger.warning('No changes detected after build.');
-    } else {
+    if (!status.isClean) {
       logger.debug('Creating a new commit with the changes from the build.');
       await (releaseBranchExists ? git.amendCommitWithAllFiles() : git.commitAllFiles(`Release ${newTag}`));
+    } else if (inputs.buildCommand) {
+      logger.warning('No changes detected after build.');
     }
 
     /* Push the git changes */
