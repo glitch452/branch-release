@@ -66,7 +66,7 @@ describe(GitService.name, () => {
 
     it('should submit the raw git command with the "-c" flag when the create option is true', async () => {
       gitMock.raw.mockResolvedValue('<result>');
-      await gitService.switch('<branchName>', { create: true });
+      await gitService.switch('<branchName>', { shouldCreate: true });
       expect(gitMock.raw).toHaveBeenCalledWith(['switch', '-c', '<branchName>']);
     });
 
