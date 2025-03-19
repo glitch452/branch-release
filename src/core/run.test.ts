@@ -221,7 +221,7 @@ describe(run.name, () => {
   it('should create the release branch if it does not exist', async () => {
     workflow.setInputValue('release-branch', '<releaseBranch>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-    expect(switchSpy).toHaveBeenCalledWith('<releaseBranch>', { create: true });
+    expect(switchSpy).toHaveBeenCalledWith('<releaseBranch>', { shouldCreate: true });
   });
 
   it('should not create the release branch if it exists', async () => {
@@ -233,7 +233,7 @@ describe(run.name, () => {
     });
     workflow.setInputValue('release-branch', '<releaseBranch>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-    expect(switchSpy).toHaveBeenCalledWith('<releaseBranch>', { create: false });
+    expect(switchSpy).toHaveBeenCalledWith('<releaseBranch>', { shouldCreate: false });
   });
 
   it('should not create a merge commit on the release branch if it does not exist', async () => {

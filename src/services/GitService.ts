@@ -41,9 +41,9 @@ export class GitService {
     return this.git.branch();
   }
 
-  async switch(branchName: string, options: { create?: boolean } = {}) {
+  async switch(branchName: string, options: { shouldCreate?: boolean } = {}) {
     const args = ['switch'];
-    if (options.create) {
+    if (options.shouldCreate) {
       args.push('-c');
     }
     args.push(branchName);

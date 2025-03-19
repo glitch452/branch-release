@@ -87,13 +87,13 @@ export async function run(
     await git.addTags([inputs.trackingTag]);
 
     logger.debug(`Switching to the release branch "${inputs.releaseBranch}".`);
-    const releaseBranchExists = (await git.getBranches()).all.includes(`remotes/${remote}/${inputs.releaseBranch}`);
-    await git.switch(inputs.releaseBranch, { create: !releaseBranchExists });
+    const releaseBranchDidExist = (await git.getBranches()).all.includes(`remotes/${remote}/${inputs.releaseBranch}`);
+    await git.switch(inputs.releaseBranch, { shouldCreate: !releaseBranchDidExist });
 
     logger.debug(`Setting git user details: ${JSON.stringify({ actor: github.context.actor, actorEmail })}`);
     await git.setUser(github.context.actor, actorEmail);
 
-    if (releaseBranchExists) {
+    if (releaseBranchDidExist) {
       logger.debug(`Creating a merge commit on the release branch "${inputs.releaseBranch}".`);
       await git.merge(initialBranch, `Release ${newTag}`);
     }
@@ -111,7 +111,7 @@ export async function run(
 
     if (!status.isClean) {
       logger.debug('Creating a new commit with the changes from the build.');
-      await (releaseBranchExists ? git.amendCommitWithAllFiles() : git.commitAllFiles(`Release ${newTag}`));
+      await (releaseBranchDidExist ? git.amendCommitWithAllFiles() : git.commitAllFiles(`Release ${newTag}`));
     } else if (inputs.buildCommand) {
       logger.warning('No changes detected after build.');
     }
