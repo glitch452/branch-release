@@ -56,18 +56,18 @@
     "semver": "7.7.2",
     "simple-git": "3.27.0",
     "yaml": "2.8.0",
-    "zod": "3.25.7"
+    "zod": "3.25.30"
   },
   "devDependencies": {
     "@commitlint/cli": "19.8.1",
     "@commitlint/config-conventional": "19.8.1",
     "@total-typescript/ts-reset": "0.6.1",
-    "@types/node": "20.17.49",
+    "@types/node": "20.17.50",
     "@vercel/ncc": "0.38.3",
     "@vitest/coverage-v8": "3.1.4",
     "eslint": "9.27.0",
     "eslint-config-spartan": "2.0.1",
-    "globals": "16.1.0",
+    "globals": "16.2.0",
     "husky": "9.1.7",
     "lint-staged": "16.0.0",
     "prettier": "3.5.3",
