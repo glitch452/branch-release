@@ -14,7 +14,7 @@ export function getInputs(getters: Pick<Workflow, 'getBooleanInput' | 'getInput'
     throw new Error(`The version override "${originals.versionOverride}" is not a valid semver string.`);
   }
 
-  const changelogTitles = z.record(z.string()).parse(JSON.parse(originals.changelogTitles || '{}'));
+  const changelogTitles = z.record(z.string(), z.string()).parse(JSON.parse(originals.changelogTitles || '{}'));
 
   const inputs = {
     buildCommand: getters.getInput('build-command'),
