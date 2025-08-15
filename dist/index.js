@@ -36050,6 +36050,9 @@ function defineLazy(object, key, getter) {
         configurable: true,
     });
 }
+function objectClone(obj) {
+    return Object.create(Object.getPrototypeOf(obj), Object.getOwnPropertyDescriptors(obj));
+}
 function assignProp(target, prop, value) {
     Object.defineProperty(target, prop, {
         value,
@@ -36130,6 +36133,11 @@ function isPlainObject(o) {
         return false;
     }
     return true;
+}
+function shallowClone(o) {
+    if (isPlainObject(o))
+        return { ...o };
+    return o;
 }
 function numKeys(data) {
     let keyCount = 0;
@@ -37316,7 +37324,7 @@ const safeParseAsync = /* @__PURE__*/ _safeParseAsync($ZodRealError);
 const version = {
     major: 4,
     minor: 0,
-    patch: 14,
+    patch: 17,
 };
 
 ;// CONCATENATED MODULE: ./node_modules/zod/v4/core/schemas.js
@@ -38001,7 +38009,7 @@ const $ZodObject = /*@__PURE__*/ (/* unused pure expression or super */ null && 
     const _normalized = util.cached(() => {
         const keys = Object.keys(def.shape);
         for (const k of keys) {
-            if (!(def.shape[k] instanceof $ZodType)) {
+            if (!def.shape[k]._zod.traits.has("$ZodType")) {
                 throw new Error(`Invalid element at key "${k}": expected a Zod schema`);
             }
         }
@@ -38923,7 +38931,8 @@ const $ZodTemplateLiteral = /*@__PURE__*/ (/* unused pure expression or super */
     $ZodType.init(inst, def);
     const regexParts = [];
     for (const part of def.parts) {
-        if (part instanceof $ZodType) {
+        if (typeof part === "object" && part !== null) {
+            // is Zod schema
             if (!part._zod.pattern) {
                 // if (!source)
                 throw new Error(`Invalid template literal part, no pattern found: ${[...part._zod.traits].shift()}`);
@@ -39824,7 +39833,7 @@ function _default(Class, innerType, defaultValue) {
         type: "default",
         innerType,
         get defaultValue() {
-            return typeof defaultValue === "function" ? defaultValue() : defaultValue;
+            return typeof defaultValue === "function" ? defaultValue() : util.shallowClone(defaultValue);
         },
     });
 }
@@ -40583,7 +40592,7 @@ function array(element, params) {
 // .keyof
 function keyof(schema) {
     const shape = schema._zod.def.shape;
-    return literal(Object.keys(shape));
+    return schemas_enum(Object.keys(shape));
 }
 const ZodObject = /*@__PURE__*/ (/* unused pure expression or super */ null && (core.$constructor("ZodObject", (inst, def) => {
     core.$ZodObject.init(inst, def);
@@ -40608,7 +40617,7 @@ function object(shape, params) {
     const def = {
         type: "object",
         get shape() {
-            util.assignProp(this, "shape", { ...shape });
+            util.assignProp(this, "shape", shape ? util.objectClone(shape) : {});
             return this.shape;
         },
         ...util.normalizeParams(params),
@@ -40620,7 +40629,7 @@ function strictObject(shape, params) {
     return new ZodObject({
         type: "object",
         get shape() {
-            util.assignProp(this, "shape", { ...shape });
+            util.assignProp(this, "shape", util.objectClone(shape));
             return this.shape;
         },
         catchall: never(),
@@ -40632,7 +40641,7 @@ function looseObject(shape, params) {
     return new ZodObject({
         type: "object",
         get shape() {
-            util.assignProp(this, "shape", { ...shape });
+            util.assignProp(this, "shape", util.objectClone(shape));
             return this.shape;
         },
         catchall: unknown(),
@@ -40914,7 +40923,7 @@ function schemas_default(innerType, defaultValue) {
         type: "default",
         innerType: innerType,
         get defaultValue() {
-            return typeof defaultValue === "function" ? defaultValue() : defaultValue;
+            return typeof defaultValue === "function" ? defaultValue() : shallowClone(defaultValue);
         },
     });
 }
@@ -40928,7 +40937,7 @@ function prefault(innerType, defaultValue) {
         type: "prefault",
         innerType: innerType,
         get defaultValue() {
-            return typeof defaultValue === "function" ? defaultValue() : defaultValue;
+            return typeof defaultValue === "function" ? defaultValue() : shallowClone(defaultValue);
         },
     });
 }
