@@ -19,8 +19,8 @@ describe(getInputs.name, () => {
     it('Should contain exactly the inputs that are requested in the action', () => {
       getInputs(workflowMock);
 
-      const actual = Object.keys(actionFile.inputs).sort();
-      const expected = [...workflowMock.requestedInputs].sort();
+      const actual = Object.keys(actionFile.inputs).toSorted();
+      const expected = [...workflowMock.requestedInputs].toSorted();
       expect(actual).toStrictEqual(expected);
     });
 
