@@ -135,6 +135,7 @@ describe(run.name, () => {
       new RequestError('', 404, { request: { headers: {}, url: 'https://example.com' } } as any),
     );
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(setOutputSpy).toHaveBeenCalledWith('current-version', '0.0.0');
   });
 
@@ -142,19 +143,20 @@ describe(run.name, () => {
     const error = new Error('<getLatestReleaseError>');
     getLatestReleaseSpy.mockRejectedValue(error);
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-    expect(setFailedSpy).toHaveBeenCalledWith(error);
+    expect(setFailedSpy).toHaveBeenCalledExactlyOnceWith(error);
   });
 
   it('should fail with an Error if the tag name for the latest release is an invalid semver version', async () => {
     getLatestReleaseSpy.mockResolvedValue({ data: { tag_name: 'invalid-tag' } });
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = new Error('The tag name "invalid-tag" for the latest release is not a valid semver version');
-    expect(setFailedSpy).toHaveBeenCalledWith(expected);
+    expect(setFailedSpy).toHaveBeenCalledExactlyOnceWith(expected);
   });
 
   it('should update the "latest" tag', async () => {
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = expect.arrayContaining(['latest']);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(addTagsSpy).toHaveBeenCalledWith(expected);
   });
 
@@ -162,41 +164,48 @@ describe(run.name, () => {
     workflow.setInputValue('latest-tag-name', '<latestTagInput>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = expect.arrayContaining(['<latestTagInput>']);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(addTagsSpy).toHaveBeenCalledWith(expected);
   });
 
   it('should override the next version provided by the "version-override" input', async () => {
     workflow.setInputValue('version-override', '2.0.0');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(setOutputSpy).toHaveBeenCalledWith('next-version', '2.0.0');
   });
 
   it('should set the correct increment-type when the "version-override" input is for a patch version', async () => {
     workflow.setInputValue('version-override', '1.0.1');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(setOutputSpy).toHaveBeenCalledWith('increment-type', 'patch');
   });
 
   it('should set the correct increment-type when the "version-override" input is for a minor version', async () => {
     workflow.setInputValue('version-override', '1.1.0');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(setOutputSpy).toHaveBeenCalledWith('increment-type', 'minor');
   });
 
   it('should set the correct increment-type when the "version-override" input is for a major version', async () => {
     workflow.setInputValue('version-override', '2.0.0');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(setOutputSpy).toHaveBeenCalledWith('increment-type', 'major');
   });
 
   it('should set the increment type to "patch" when there is no git history', async () => {
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(setOutputSpy).toHaveBeenCalledWith('increment-type', 'patch');
   });
 
   it('should set the increment type to an empty string when the "version-override" input is the same as the current version', async () => {
     workflow.setInputValue('version-override', '1.0.0');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(setOutputSpy).toHaveBeenCalledWith('increment-type', '');
   });
 
@@ -209,18 +218,21 @@ describe(run.name, () => {
   it('should set tag name from the "tracking-tag" input', async () => {
     workflow.setInputValue('tracking-tag', '<TrackingTag>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(addTagsSpy).toHaveBeenCalledWith(['<TrackingTag>']);
   });
 
   it('should switch to the release branch name provided by the "release-branch" input', async () => {
     workflow.setInputValue('release-branch', '<releaseBranch>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(switchSpy).toHaveBeenCalledWith('<releaseBranch>', expect.anything());
   });
 
   it('should create the release branch if it does not exist', async () => {
     workflow.setInputValue('release-branch', '<releaseBranch>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(switchSpy).toHaveBeenCalledWith('<releaseBranch>', { shouldCreate: true });
   });
 
@@ -233,6 +245,7 @@ describe(run.name, () => {
     });
     workflow.setInputValue('release-branch', '<releaseBranch>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(switchSpy).toHaveBeenCalledWith('<releaseBranch>', { shouldCreate: false });
   });
 
@@ -246,19 +259,19 @@ describe(run.name, () => {
   it('should create a merge commit on the release branch if it already exists', async () => {
     vi.stubEnv('GITHUB_HEAD_REF', '<initialBranch>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-    expect(mergeSpy).toHaveBeenCalledWith('<initialBranch>', expect.anything());
+    expect(mergeSpy).toHaveBeenCalledExactlyOnceWith('<initialBranch>', expect.anything());
   });
 
   it('should set the correct commit message when creating a merge commit on the release branch', async () => {
     vi.stubEnv('GITHUB_HEAD_REF', '<initialBranch>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-    expect(mergeSpy).toHaveBeenCalledWith(expect.anything(), 'Release v1.0.1');
+    expect(mergeSpy).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'Release v1.0.1');
   });
 
   it('should execute the build command if one is provided via the "build-command" input', async () => {
     workflow.setInputValue('build-command', '<buildCommand>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-    expect(execMock).toHaveBeenCalledWith('<buildCommand>', expect.anything(), expect.anything());
+    expect(execMock).toHaveBeenCalledExactlyOnceWith('<buildCommand>', expect.anything(), expect.anything());
   });
 
   it('should not execute the build command if one is provided via the "build-command" input but the "dry-run" input is true', async () => {
@@ -304,6 +317,7 @@ describe(run.name, () => {
   it('should update the version tags for the major, major with minor, and major with minor and patch versions', async () => {
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = expect.arrayContaining(['v1', 'v1.0', 'v1.0.1']);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(addTagsSpy).toHaveBeenCalledWith(expected);
   });
 
@@ -323,7 +337,7 @@ describe(run.name, () => {
 
   it('should push the commit on the release branch to the remote', async () => {
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-    expect(pushToRemoteSpy).toHaveBeenCalledWith({ remote: 'origin', branch: 'release' });
+    expect(pushToRemoteSpy).toHaveBeenCalledExactlyOnceWith({ remote: 'origin', branch: 'release' });
   });
   it('should not push the commit on the release branch to the remote when the "dry-run" input is true', async () => {
     workflow.setInputValue('dry-run', 'true');
@@ -344,6 +358,7 @@ describe(run.name, () => {
 
   it('should switch back to the initial branch', async () => {
     await run(loggerMock, workflow, gitHubMock, git, execMock);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(switchSpy).toHaveBeenCalledWith('-');
   });
 
@@ -353,7 +368,7 @@ describe(run.name, () => {
     getHistorySpy.mockResolvedValue([makeGitHistory({ message: 'feat!: <majorFeatureSummary>' })]);
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = expect.objectContaining({ body: expect.stringContaining('BREAKING CHANGES') });
-    expect(createReleaseSpy).toHaveBeenCalledWith(expected);
+    expect(createReleaseSpy).toHaveBeenCalledExactlyOnceWith(expected);
   });
 
   it('should use the changelog titles provided by the "changelog-titles" input', async () => {
@@ -362,7 +377,7 @@ describe(run.name, () => {
     getHistorySpy.mockResolvedValue([makeGitHistory({ message: 'feat: <featureSummary>' })]);
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = expect.objectContaining({ body: expect.stringContaining('<featureTitle>') });
-    expect(createReleaseSpy).toHaveBeenCalledWith(expected);
+    expect(createReleaseSpy).toHaveBeenCalledExactlyOnceWith(expected);
   });
 
   it('should use the values provided by the "major-types" input when grouping entries for the changelog', async () => {
@@ -371,13 +386,14 @@ describe(run.name, () => {
     getHistorySpy.mockResolvedValue([makeGitHistory({ message: 'example: <summary>' })]);
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = expect.objectContaining({ body: expect.stringContaining('BREAKING CHANGES') });
-    expect(createReleaseSpy).toHaveBeenCalledWith(expected);
+    expect(createReleaseSpy).toHaveBeenCalledExactlyOnceWith(expected);
   });
 
   it('should append the value from the "git-tag-suffix" input to the git tags', async () => {
     workflow.setInputValue('git-tag-suffix', '<suffix>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = expect.arrayContaining(['v1<suffix>', 'v1.0<suffix>', 'v1.0.1<suffix>']);
+    // eslint-disable-next-line vitest/prefer-called-exactly-once-with
     expect(addTagsSpy).toHaveBeenCalledWith(expected);
   });
 
@@ -458,7 +474,7 @@ describe(run.name, () => {
     workflow.setInputValue('build-command', '<buildCommand>');
     vi.spyOn(git, 'status').mockResolvedValue({ isClean: true } as any);
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-    expect(loggerMock.warning).toHaveBeenCalledWith(expect.stringContaining('No changes'));
+    expect(loggerMock.warning).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('No changes'));
   });
 
   it('should not log a warning when there is a build command provided and there are changes detected', async () => {

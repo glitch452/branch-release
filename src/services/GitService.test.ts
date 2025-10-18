@@ -23,6 +23,7 @@ describe(GitService.name, () => {
       const userName = '<userName>';
       const email = '<email>';
       await gitService.setUser(userName, email);
+      // eslint-disable-next-line vitest/prefer-called-exactly-once-with
       expect(gitMock.addConfig).toHaveBeenCalledWith('user.name', userName, false, 'local');
     });
 
@@ -30,6 +31,7 @@ describe(GitService.name, () => {
       const userName = '<userName>';
       const email = '<email>';
       await gitService.setUser(userName, email);
+      // eslint-disable-next-line vitest/prefer-called-exactly-once-with
       expect(gitMock.addConfig).toHaveBeenCalledWith('user.email', email, false, 'local');
     });
   });
@@ -61,13 +63,13 @@ describe(GitService.name, () => {
     it('should submit the raw git command', async () => {
       gitMock.raw.mockResolvedValue('<result>');
       await gitService.switch('<branchName>');
-      expect(gitMock.raw).toHaveBeenCalledWith(['switch', '<branchName>']);
+      expect(gitMock.raw).toHaveBeenCalledExactlyOnceWith(['switch', '<branchName>']);
     });
 
     it('should submit the raw git command with the "-c" flag when the create option is true', async () => {
       gitMock.raw.mockResolvedValue('<result>');
       await gitService.switch('<branchName>', { shouldCreate: true });
-      expect(gitMock.raw).toHaveBeenCalledWith(['switch', '-c', '<branchName>']);
+      expect(gitMock.raw).toHaveBeenCalledExactlyOnceWith(['switch', '-c', '<branchName>']);
     });
 
     it('should return the result', async () => {
@@ -80,22 +82,22 @@ describe(GitService.name, () => {
   describe(GitService.prototype.merge.name, () => {
     it('should submit the given branch name', async () => {
       await gitService.merge('<branchName>');
-      expect(gitMock.merge).toHaveBeenCalledWith(expect.arrayContaining(['<branchName>']));
+      expect(gitMock.merge).toHaveBeenCalledExactlyOnceWith(expect.arrayContaining(['<branchName>']));
     });
 
     it('should add the "--no-ff" flag to the command', async () => {
       await gitService.merge('<branchName>');
-      expect(gitMock.merge).toHaveBeenCalledWith(expect.arrayContaining(['--no-ff']));
+      expect(gitMock.merge).toHaveBeenCalledExactlyOnceWith(expect.arrayContaining(['--no-ff']));
     });
 
     it('should add the given message to the command', async () => {
       await gitService.merge('<branchName>', '<message>');
-      expect(gitMock.merge).toHaveBeenCalledWith(expect.arrayContaining(['-m', '<message>']));
+      expect(gitMock.merge).toHaveBeenCalledExactlyOnceWith(expect.arrayContaining(['-m', '<message>']));
     });
 
     it('should build the command with the arguments in the correct order', async () => {
       await gitService.merge('<branchName>', '<message>');
-      expect(gitMock.merge).toHaveBeenCalledWith(['<branchName>', '--no-ff', '-m', '<message>']);
+      expect(gitMock.merge).toHaveBeenCalledExactlyOnceWith(['<branchName>', '--no-ff', '-m', '<message>']);
     });
 
     it('should return the result', async () => {
@@ -115,12 +117,14 @@ describe(GitService.name, () => {
     it('should call the underlying tag method with the "--force" option for the first tag provided', async () => {
       const tags = ['<tag1>', '<tag2>'];
       await gitService.addTags(tags);
+      // eslint-disable-next-line vitest/prefer-called-exactly-once-with
       expect(gitMock.tag).toHaveBeenCalledWith(['<tag1>', '--force']);
     });
 
     it('should call the underlying tag method with the "--force" option for the second tag provided', async () => {
       const tags = ['<tag1>', '<tag2>'];
       await gitService.addTags(tags);
+      // eslint-disable-next-line vitest/prefer-called-exactly-once-with
       expect(gitMock.tag).toHaveBeenCalledWith(['<tag2>', '--force']);
     });
   });
@@ -141,6 +145,7 @@ describe(GitService.name, () => {
   describe(GitService.prototype.pushToRemote.name, () => {
     it('should call the underlying pushToRemote method', async () => {
       await gitService.pushToRemote();
+      // eslint-disable-next-line vitest/prefer-called-exactly-once-with
       expect(gitMock.push).toHaveBeenCalledOnce();
     });
 
@@ -227,6 +232,7 @@ describe(GitService.name, () => {
 
     it('should fetch the tags for the repo', async () => {
       await gitService.getHistory(trackingTag, newCommitSha);
+      // eslint-disable-next-line vitest/prefer-called-exactly-once-with
       expect(gitMock.fetch).toHaveBeenCalledWith(['--tags']);
     });
 
