@@ -1,9 +1,6 @@
 name: Branch Release
 author: David Dearden
-description: >-
-  Automate the release of code where the dist files need to published to a GitHub branch. Use Conventional Commits to
-  automatically update the release version and create GitHub release notes, then build and push to the release branch
-  with git tags.
+description: Automation for releasing a package where the dist files need to be published to another branch.
 branding:
   icon: git-branch
   color: red
