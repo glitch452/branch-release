@@ -49,7 +49,7 @@
   },
   "homepage": "https://github.com/glitch452/branch-release#readme",
   "dependencies": {
-    "@actions/core": "1.11.1",
+    "@actions/core": "2.0.1",
     "@actions/exec": "2.0.0",
     "@actions/github": "6.0.1",
     "chardet": "2.1.1",
