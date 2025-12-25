@@ -1,4 +1,4 @@
-import type { Logger } from 'src/types/Logger.js';
+import type { Logger } from '../types/Logger.js';
 
 export function getLoggerMock() {
   return {

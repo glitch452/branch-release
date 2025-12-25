@@ -13,7 +13,7 @@ const baseConfig = defineConfig({
     coverage: {
       reporter: ['text'],
       include: ['src/**/*.ts'],
-      exclude: ['src/index.ts', 'src/types', 'src/**/*.d.ts'],
+      exclude: ['src/index.ts', 'src/types', 'src/mocks', 'src/**/*.d.ts'],
     },
   },
 });
