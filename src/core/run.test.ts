@@ -2,12 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { RequestError } from '@octokit/request-error';
 import yaml from 'yaml';
+import { getGitHubMock } from '../mocks/getGitHubMock.js';
+import { getGitMock } from '../mocks/getGitMock.js';
+import { getLoggerMock } from '../mocks/getLoggerMock.js';
+import { WorkflowMock } from '../mocks/WorkflowMock.js';
 import { GitHistoryEntry, GitService } from '../services/GitService.js';
 import { run } from './run.js';
-import { getGitHubMock } from '__mocks__/getGitHubMock.js';
-import { getGitMock } from '__mocks__/getGitMock.js';
-import { getLoggerMock } from '__mocks__/getLoggerMock.js';
-import { WorkflowMock } from '__mocks__/WorkflowMock.js';
 
 function makeGitHistory(values?: Partial<GitHistoryEntry>): GitHistoryEntry {
   return {
@@ -135,7 +135,6 @@ describe(run.name, () => {
       new RequestError('', 404, { request: { headers: {}, url: 'https://example.com' } } as any),
     );
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(setOutputSpy).toHaveBeenCalledWith('current-version', '0.0.0');
   });
 
@@ -156,7 +155,6 @@ describe(run.name, () => {
   it('should update the "latest" tag', async () => {
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = expect.arrayContaining(['latest']);
-
     expect(addTagsSpy).toHaveBeenCalledWith(expected);
   });
 
@@ -164,48 +162,41 @@ describe(run.name, () => {
     workflow.setInputValue('latest-tag-name', '<latestTagInput>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = expect.arrayContaining(['<latestTagInput>']);
-
     expect(addTagsSpy).toHaveBeenCalledWith(expected);
   });
 
   it('should override the next version provided by the "version-override" input', async () => {
     workflow.setInputValue('version-override', '2.0.0');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(setOutputSpy).toHaveBeenCalledWith('next-version', '2.0.0');
   });
 
   it('should set the correct increment-type when the "version-override" input is for a patch version', async () => {
     workflow.setInputValue('version-override', '1.0.1');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(setOutputSpy).toHaveBeenCalledWith('increment-type', 'patch');
   });
 
   it('should set the correct increment-type when the "version-override" input is for a minor version', async () => {
     workflow.setInputValue('version-override', '1.1.0');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(setOutputSpy).toHaveBeenCalledWith('increment-type', 'minor');
   });
 
   it('should set the correct increment-type when the "version-override" input is for a major version', async () => {
     workflow.setInputValue('version-override', '2.0.0');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(setOutputSpy).toHaveBeenCalledWith('increment-type', 'major');
   });
 
   it('should set the increment type to "patch" when there is no git history', async () => {
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(setOutputSpy).toHaveBeenCalledWith('increment-type', 'patch');
   });
 
   it('should set the increment type to an empty string when the "version-override" input is the same as the current version', async () => {
     workflow.setInputValue('version-override', '1.0.0');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(setOutputSpy).toHaveBeenCalledWith('increment-type', '');
   });
 
@@ -218,21 +209,18 @@ describe(run.name, () => {
   it('should set tag name from the "tracking-tag" input', async () => {
     workflow.setInputValue('tracking-tag', '<TrackingTag>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(addTagsSpy).toHaveBeenCalledWith(['<TrackingTag>']);
   });
 
   it('should switch to the release branch name provided by the "release-branch" input', async () => {
     workflow.setInputValue('release-branch', '<releaseBranch>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(switchSpy).toHaveBeenCalledWith('<releaseBranch>', expect.anything());
   });
 
   it('should create the release branch if it does not exist', async () => {
     workflow.setInputValue('release-branch', '<releaseBranch>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(switchSpy).toHaveBeenCalledWith('<releaseBranch>', { shouldCreate: true });
   });
 
@@ -245,7 +233,6 @@ describe(run.name, () => {
     });
     workflow.setInputValue('release-branch', '<releaseBranch>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(switchSpy).toHaveBeenCalledWith('<releaseBranch>', { shouldCreate: false });
   });
 
@@ -358,7 +345,6 @@ describe(run.name, () => {
 
   it('should switch back to the initial branch', async () => {
     await run(loggerMock, workflow, gitHubMock, git, execMock);
-
     expect(switchSpy).toHaveBeenCalledWith('-');
   });
 
@@ -393,7 +379,6 @@ describe(run.name, () => {
     workflow.setInputValue('git-tag-suffix', '<suffix>');
     await run(loggerMock, workflow, gitHubMock, git, execMock);
     const expected = expect.arrayContaining(['v1<suffix>', 'v1.0<suffix>', 'v1.0.1<suffix>']);
-
     expect(addTagsSpy).toHaveBeenCalledWith(expected);
   });
 

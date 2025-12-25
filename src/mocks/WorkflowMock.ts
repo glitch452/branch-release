@@ -1,4 +1,4 @@
-import type { InputOptions, Workflow } from 'src/types/Workflow.js';
+import type { InputOptions, Workflow } from '../types/Workflow.js';
 
 export class WorkflowMock implements Workflow {
   protected lookup: Record<string, string> = {};

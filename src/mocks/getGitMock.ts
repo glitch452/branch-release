@@ -1,4 +1,4 @@
-import type { Git } from 'src/services/GitService.js';
+import type { Git } from '../services/GitService.js';
 
 export function getGitMock() {
   return {
