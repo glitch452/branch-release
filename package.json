@@ -67,7 +67,7 @@
     "@vitest/coverage-v8": "4.0.16",
     "eslint": "9.39.2",
     "eslint-config-spartan": "5.12.4",
-    "globals": "16.5.0",
+    "globals": "17.0.0",
     "husky": "9.1.7",
     "lint-staged": "16.2.7",
     "prettier": "3.7.4",
