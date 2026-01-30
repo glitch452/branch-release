@@ -8,7 +8,7 @@
     ".": "./dist/index.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "build:w": "npm run build -- --watch",
@@ -51,7 +51,8 @@
   "dependencies": {
     "@actions/core": "2.0.2",
     "@actions/exec": "2.0.0",
-    "@actions/github": "7.0.0",
+    "@actions/github": "8.0.1",
+    "@octokit/request-error": "^7.1.0",
     "chardet": "2.1.1",
     "semver": "7.7.3",
     "simple-git": "3.30.0",
