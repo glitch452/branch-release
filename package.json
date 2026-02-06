@@ -50,7 +50,7 @@
   "homepage": "https://github.com/glitch452/branch-release#readme",
   "dependencies": {
     "@actions/core": "2.0.2",
-    "@actions/exec": "2.0.0",
+    "@actions/exec": "3.0.0",
     "@actions/github": "8.0.1",
     "@octokit/request-error": "^7.1.0",
     "chardet": "2.1.1",
