@@ -67,7 +67,7 @@
     "@vercel/ncc": "0.38.4",
     "@vitest/coverage-v8": "4.1.7",
     "eslint": "9.39.2",
-    "eslint-config-spartan": "5.19.5",
+    "eslint-config-spartan": "6.0.0",
     "globals": "17.6.0",
     "husky": "9.1.7",
     "lint-staged": "17.0.5",
