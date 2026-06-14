@@ -5,6 +5,7 @@ const baseConfig = defineConfig({
   resolve: {
     alias: {
       __mocks__: fileURLToPath(new URL('__mocks__', import.meta.url)),
+      src: fileURLToPath(new URL('src', import.meta.url)),
     },
   },
   test: {
