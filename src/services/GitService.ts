@@ -27,8 +27,8 @@ export class GitService {
     private readonly git: Git = simpleGit(),
   ) {}
 
-  async setUser(userName: string, email: string) {
-    await this.git.addConfig('user.name', userName, false, 'local');
+  async setUser(username: string, email: string) {
+    await this.git.addConfig('user.name', username, false, 'local');
     await this.git.addConfig('user.email', email, false, 'local');
   }
 

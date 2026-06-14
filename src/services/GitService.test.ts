@@ -19,18 +19,18 @@ describe(GitService.name, () => {
   });
 
   describe(GitService.prototype.setUser.name, () => {
-    it('should set the given userName in the local scope', async () => {
-      const userName = '<userName>';
+    it('should set the given username in the local scope', async () => {
+      const username = '<username>';
       const email = '<email>';
-      await gitService.setUser(userName, email);
+      await gitService.setUser(username, email);
 
-      expect(gitMock.addConfig).toHaveBeenCalledWith('user.name', userName, false, 'local');
+      expect(gitMock.addConfig).toHaveBeenCalledWith('user.name', username, false, 'local');
     });
 
     it('should set the given email address in the local scope', async () => {
-      const userName = '<userName>';
+      const username = '<username>';
       const email = '<email>';
-      await gitService.setUser(userName, email);
+      await gitService.setUser(username, email);
 
       expect(gitMock.addConfig).toHaveBeenCalledWith('user.email', email, false, 'local');
     });
