@@ -1,7 +1,7 @@
 # Branch Release
 
 [![GitHub License](https://img.shields.io/github/license/glitch452/branch-release)](https://choosealicense.com/licenses/mit/)
-[![GitHub Release](https://img.shields.io/github/v/release/glitch452/branch-release)](https://github.com/glitch452/easy-npm-publish/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/glitch452/branch-release)](https://github.com/glitch452/branch-release/releases)
 [![GitHub Marketplace](https://img.shields.io/badge/marketplace-branch--release-blue?logo=github)](https://github.com/marketplace/actions/branch-release)
 
 Automate the release of code where the dist files need to be published to a GitHub branch (i.e. a GitHub Action). Use
