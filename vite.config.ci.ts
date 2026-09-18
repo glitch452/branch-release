@@ -2,13 +2,13 @@ import { defineConfig } from 'vitest/config';
 import { InlineConfig } from 'vitest/node';
 import baseConfig from './vite.config.js';
 
-const baseVitestConfig = baseConfig.test;
-const baseCoverage: Omit<InlineConfig['coverage'], 'reporter'> | undefined = baseVitestConfig?.coverage;
+const { test: baseConfigTest, ...baseConfigRest } = baseConfig;
+const baseCoverage: Omit<NonNullable<InlineConfig['coverage']>, 'reporter'> | undefined = baseConfigTest?.coverage;
 
 const configForCi = defineConfig({
-  resolve: baseConfig.resolve,
+  ...baseConfigRest,
   test: {
-    ...baseVitestConfig,
+    ...baseConfigTest,
     coverage: {
       ...baseCoverage,
       reporter: ['text', 'json', 'json-summary'],
